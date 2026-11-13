@@ -5,6 +5,7 @@ import hashlib
 from functools import partial
 import http.server
 import json
+import re
 from pathlib import Path
 import sys
 import threading
@@ -19,8 +20,11 @@ parser.add_argument('--directory', type=Path, default=ROOT / 'build/export/m3/se
 parser.add_argument('--expected', default='M2_SEMANTICS_OK checks=15 observed=31')
 parser.add_argument('--movement', action='store_true')
 parser.add_argument('--reloads', type=int, default=2)
+parser.add_argument('--report-dir', type=Path)
+parser.add_argument('--label')
+parser.add_argument('--require-aot', action='store_true')
 args = parser.parse_args()
-logs = ROOT / 'build/m3'
+logs = args.report_dir or ROOT / 'build/m3'
 logs.mkdir(parents=True, exist_ok=True)
 
 
@@ -32,13 +36,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), partial(Handler, directory=str(args.directory.resolve())))
 threading.Thread(target=server.serve_forever, daemon=True).start()
 messages, errors = [], []
-label = 'movement' if args.movement else 'semantics' if args.expected.startswith('M2_') else 'node2d'
+label = args.label or ('movement' if args.movement else 'extended' if args.expected.startswith('M5_') else 'semantics' if args.expected.startswith('M2_') else 'node2d')
+live_log = logs / f'console-{label}.log'
+live_log.write_text('', encoding='utf-8')
+
+
+def record_console(message):
+    messages.append(message.text)
+    if any(marker in message.text for marker in ['M5_FAIL', 'M2_FAIL', 'M0_DOTNET_FAIL', 'LEANCLR_GODOT_FATAL', 'LEANCLR_PUBLICATION_REJECTED']):
+        errors.append(message.text)
+    with live_log.open('a', encoding='utf-8') as output:
+        output.write(message.text + '\n')
+
 try:
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(executable_path='C:/Program Files/Google/Chrome/Application/chrome.exe', headless=True,
             args=['--enable-unsafe-swiftshader', '--disable-background-networking'])
         page = browser.new_page(viewport={'width': 960, 'height': 640})
-        page.on('console', lambda message: messages.append(message.text))
+        page.on('console', record_console)
         page.on('pageerror', lambda error: errors.append(str(error)))
         query = '' if args.movement else '?smoke'
         page.goto(f'http://127.0.0.1:{server.server_port}/index.html{query}', wait_until='domcontentloaded')
@@ -46,6 +61,8 @@ try:
         expected = 'LEANCLR_GODOT_READY backend=LeanCLR' if args.movement else args.expected
         while time.monotonic() < deadline and not any(expected in line for line in messages) and not errors:
             page.wait_for_timeout(100)
+        if not any(expected in line for line in messages) or errors:
+            raise RuntimeError('Initial browser execution failed: ' + str(errors) + '\n' + '\n'.join(messages[-20:]))
         if not args.movement:
             for reload_index in range(args.reloads):
                 page.wait_for_timeout(200)
@@ -92,7 +109,14 @@ if errors or not any(required in line for line in messages):
     raise RuntimeError('Web runtime did not pass: ' + str(errors))
 if not any('LEANCLR_GODOT_READY backend=LeanCLR' in line for line in messages):
     raise RuntimeError('LeanCLR backend did not initialize')
+if args.require_aot and sum('LEANCLR_AOT_HOTCALL module=DemoLogic step=4 benchmark=0' in line for line in messages) != args.reloads + 1:
+    raise RuntimeError('Compiled gameplay entry counters were not observed on every run')
+memory_sizes = [int(match[1]) for line in messages if (match := re.search(r'LEANCLR_WASM_MEMORY bytes=(\d+)', line))]
+if args.expected.startswith('M5_EXTENDED') and not args.movement:
+    if len(memory_sizes) != args.reloads + 1 or not all(128 * 1024 * 1024 < size <= 384 * 1024 * 1024 for size in memory_sizes):
+        raise RuntimeError('Wasm memory growth or retained-heap budget failed: ' + str(memory_sizes))
 print('WEB_RUNTIME_OK', required)
 (logs / f'validation-{label}.json').write_text(json.dumps({'status': 'passed', 'browser': browser_version,
     'runs': 1 if args.movement else args.reloads + 1, 'expected': required,
+    'wasm_memory_bytes': memory_sizes,
     'files': {name: hashlib.sha256((args.directory / name).read_bytes()).hexdigest() for name in ['index.wasm', 'index.pck', 'index.js']}}, indent=2) + '\n', encoding='utf-8')

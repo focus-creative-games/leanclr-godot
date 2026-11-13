@@ -13,6 +13,9 @@ $start = @{FilePath=$Executable; ArgumentList=$arguments; PassThru=$true;
     RedirectStandardOutput="$root/build/m1/stdout-$suffix.log"; RedirectStandardError="$root/build/m1/stderr-$suffix.log"}
 if (-not $Visible) { $start.WindowStyle = 'Hidden' }
 $process = Start-Process @start
+# Retain the native process handle before polling; Windows PowerShell otherwise
+# can lose ExitCode for a short-lived GUI executable after Refresh().
+$null = $process.Handle
 $modules = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 $watch = [Diagnostics.Stopwatch]::StartNew()
 $peakWorkingSet = 0L
@@ -23,7 +26,7 @@ while (-not $process.HasExited) {
     $null = $process.WaitForExit(10)
     $process.Refresh()
 }
-$process.Refresh()
+$process.WaitForExit()
 $text = Get-Content $log -Raw
 if ($process.ExitCode -ne 0 -or $text -notmatch 'LEANCLR_GODOT_READY backend=LeanCLR' -or
     $text -notmatch 'NODE2D_SMOKE_OK instances=1 frames=4 x=8 speed=120') { throw "M1 smoke failed; see $log" }

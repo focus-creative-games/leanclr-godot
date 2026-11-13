@@ -2,6 +2,7 @@
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 import urllib.request
@@ -9,7 +10,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SDK = ROOT / '.tools/android-sdk'
-EXISTING = Path('C:/Users/MSN/AppData/Local/Android/Sdk')
+EXISTING = Path(os.environ.get('LOCALAPPDATA', str(Path.home() / 'AppData/Local'))) / 'Android/Sdk'
 PACKAGES = [
     ('ndk/29.0.14206865', 'android-ndk-r29-windows.zip', 833850862, 'ab3bb30fbb9e6903666d60c55d11e78b04e07472'),
     ('platforms/android-36', 'platform-36_r02.zip', 65878410, '2c1a80dd4d9f7d0e6dd336ec603d9b5c55a6f576'),

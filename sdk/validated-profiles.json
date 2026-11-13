@@ -1,0 +1,28 @@
+{
+  "dotnet": {
+    "Player.cs": "5e5812781e402746c7529f1850cc0ba59518e7f29533b6f7e81d68f902bbdc54",
+    "Gameplay.csproj": "e0c28f226db727da534f97ca4128a109585d5dff91b25b7d2a3dceb26c22fd5f",
+    "Main.tscn": "76f5fcd208c313dae371a173963502395f1d78b3b1a94053b30be7d4245aa118",
+    "project.godot": "e9e31fde11b111e560c5ba2f4a19eb2b56ed69535082a68c816c95f8614c76e1",
+    "@DemoLogic/Motion.cs": "7f53c4210c6ac09589fdcc7764126f17df3cb798b952e931dbd836a7ddf551f8"
+  },
+  "semantics": {
+    "BasePlayer.cs": "e47f30a4a6887210f8d887e4b164e80d1b0a815fd19c05084b350269f1e8ee81",
+    "ChildNode.cs": "a6caf6eb90f2fe242b422c89fe9277dac6a9832fb8447826dc72ced9d28b4d07",
+    "Player.cs": "fa417ec285c3c2c35371e3cc84bf233a43bea94eb8524bfe060169b45d74c265",
+    "StatsResource.cs": "209f6d57be054fcc8679c7ef82fbf52ee59c2c17924ab5a8b1c16d25a6f50cde",
+    "Gameplay.csproj": "0f4715b9c945a75428570e7a7578f82c5ceb4318e1c003c1cfcb28be248d1983",
+    "Child.tscn": "3061b029fb638ed1a534afe215d65fd4f66014498420076e265fe98531a93d12",
+    "Main.tscn": "a95b4ed70ecffb9aa8a3a262d2dbcefab95416a4be840db64df16683a924c4d7",
+    "Config.tres": "87e243042c34d8bbc360c8be2ec8ecb17adf392cc1f5b3d3462e74177c5940c6",
+    "project.godot": "62a63c62911014b1722076d3ba0ac2d9b1a9159fea14ee3ffc5a0811a882c38a",
+    "@DemoLogic/Motion.cs": "7f53c4210c6ac09589fdcc7764126f17df3cb798b952e931dbd836a7ddf551f8"
+  },
+  "extended": {
+    "Player.cs": "c6ee0a1d643c3374f795da435ff4d7d0db1c0a109972048b454db9170cb6d6f0",
+    "Gameplay.csproj": "0f4715b9c945a75428570e7a7578f82c5ceb4318e1c003c1cfcb28be248d1983",
+    "Main.tscn": "08c9503a5657a487be61237f0afcf4dc3377a8b75b27236393b84e59ea1bd08f",
+    "project.godot": "db1a18f36e9abacb395aef2f7cf98537584d7c7e371dff7c692d7a774457e1bc",
+    "@DemoLogic/Motion.cs": "7f53c4210c6ac09589fdcc7764126f17df3cb798b952e931dbd836a7ddf551f8"
+  }
+}

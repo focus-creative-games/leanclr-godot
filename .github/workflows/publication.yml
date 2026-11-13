@@ -1,0 +1,35 @@
+name: LeanCLR publication contracts
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    # This runner has the pinned Godot .NET editor, MSVC, SDK caches, Chrome and
+    # a MuMu instance at localhost:7555. No device or signing secret is assumed
+    # on GitHub-hosted runners. One job prevents shared build-tree races.
+    runs-on: [self-hosted, Windows, X64, leanclr-godot]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          clean: false
+          submodules: recursive
+      - name: Check the prepared SDK checkout
+        shell: powershell
+        run: tools/ci-preflight.ps1
+      - name: Build and validate the accepted platform matrix
+        shell: powershell
+        run: tools/validate-sdk.ps1 -Build
+      - name: Retain manifests and execution receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: publication-receipts
+          path: |
+            build/ci/**/*.json
+            build/ci/**/*.log
+            build/m3/validation-*.json
+            build/android/validation-*/report.json
+            build/android/lifecycle/report.json
+            build/m5/performance/report.json
+          if-no-files-found: warn

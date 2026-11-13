@@ -3,6 +3,36 @@ using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
 using System.Text.Json;
 
+if (args.Length >= 2 && args[0] == "--scan")
+{
+    var assemblies = new List<object>();
+    foreach (string path in args.Skip(1))
+    {
+        using var stream = File.OpenRead(path);
+        using var pe = new PEReader(stream);
+        var reader = pe.GetMetadataReader();
+        var members = new SortedSet<string>(StringComparer.Ordinal);
+        var imports = new List<string>();
+        foreach (var handle in reader.MemberReferences)
+        {
+            var member = reader.GetMemberReference(handle);
+            if (member.Parent.Kind != HandleKind.TypeReference) continue;
+            var type = reader.GetTypeReference((TypeReferenceHandle)member.Parent);
+            members.Add(reader.GetString(type.Namespace) + "." + reader.GetString(type.Name) + "::" + reader.GetString(member.Name));
+        }
+        foreach (var handle in reader.MethodDefinitions)
+        {
+            var method = reader.GetMethodDefinition(handle);
+            if ((method.Attributes & System.Reflection.MethodAttributes.PinvokeImpl) == 0) continue;
+            var import = method.GetImport();
+            imports.Add(reader.GetString(reader.GetModuleReference(import.Module).Name) + "!" + reader.GetString(import.Name));
+        }
+        assemblies.Add(new { assembly = reader.GetString(reader.GetAssemblyDefinition().Name), members, imports });
+    }
+    Console.WriteLine(JsonSerializer.Serialize(assemblies));
+    return 0;
+}
+
 if (args.Length == 2 && args[0] == "--scripts")
 {
     using var stream = File.OpenRead(args[1]);
