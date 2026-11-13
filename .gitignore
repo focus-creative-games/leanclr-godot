@@ -9,3 +9,8 @@
 /demo/managed/**/provenance.json
 /tools/__pycache__/
 /tools/templates-tail.bin
+/samples/dotnet/.godot/
+/samples/dotnet/.nuget/
+/samples/dotnet/NuGet.Config
+/samples/dotnet/bin/
+/samples/dotnet/obj/

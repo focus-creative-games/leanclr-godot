@@ -1,0 +1,10 @@
+{
+  "platform/web/export/export_plugin.cpp": {
+    "before": "6f7e056683d5f1d30b1fc9aa5b94518af0dcb83841a2978dc756dc2d5d39d088",
+    "after": "3cf8eb1952babcb38372907881ca6942d4abc6df71adf6df323fc26eacee6805"
+  },
+  "modules/mono/editor/GodotTools/GodotTools/Export/ExportPlugin.cs": {
+    "before": "eee99c42ecfb5f6bd689760d8be268b0af761b03ca55e0f53cef69cc52e3771f",
+    "after": "024d2237847977d0b8fd0ee38628f1a3add2de0c6f7963039a9870839b1a7c60"
+  }
+}

@@ -24,6 +24,17 @@ set(LEANCLR_GC_DEBUG OFF CACHE BOOL "")
 set(LEANCLR_ENABLE_CPP_EXCEPTIONS OFF CACHE BOOL "")
 add_subdirectory(extern/godot-cpp)
 add_subdirectory("${LEANCLR_SOURCE_DIR}/src/runtime" leanclr-runtime)
+option(LEANCLR_GODOT_M0_PROBES "Build the public ABI milestone probe" OFF)
+if(LEANCLR_GODOT_M0_PROBES)
+    add_executable(m0-public-abi tests/m0/public_abi.cpp)
+    target_link_libraries(m0-public-abi PRIVATE leanclr)
+    target_include_directories(m0-public-abi PRIVATE "${LEANCLR_SOURCE_DIR}/src/runtime/public")
+    if(EMSCRIPTEN)
+        set_target_properties(m0-public-abi PROPERTIES SUFFIX ".js")
+        target_link_options(m0-public-abi PRIVATE -sENVIRONMENT=node -sALLOW_MEMORY_GROWTH=1 -sEXIT_RUNTIME=1
+            -lnodefs.js "--pre-js=${LEANCLR_SOURCE_DIR}/src/benchmarks/aot-baseline/nodefs.js")
+    endif()
+endif()
 # This pinned runtime defines a C symbol with the Win32 API's name. Keep the
 # runtime-local implementation distinct when linking with godot-cpp's Kernel32 imports.
 if(WIN32)

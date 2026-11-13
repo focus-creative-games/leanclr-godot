@@ -1,0 +1,10 @@
+<Project Sdk="Godot.NET.Sdk/4.7.2">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <M0Revision Condition="'$(M0Revision)' == ''">1</M0Revision>
+  </PropertyGroup>
+  <ItemGroup>
+    <AssemblyMetadata Include="M0Revision" Value="$(M0Revision)" />
+  </ItemGroup>
+</Project>

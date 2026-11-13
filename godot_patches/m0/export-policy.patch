@@ -1,0 +1,51 @@
+--- a/platform/web/export/export_plugin.cpp
++++ b/platform/web/export/export_plugin.cpp
+@@ -423,11 +423,14 @@
+ 
+ bool EditorExportPlatformWeb::has_valid_export_configuration(const Ref<EditorExportPreset> &p_preset, String &r_error, bool &r_missing_templates, bool p_debug) const {
+ #ifdef MODULE_MONO_ENABLED
+-	// Don't check for additional errors, as this particular error cannot be resolved.
+-	r_error += TTR("Exporting to Web is currently not supported in Godot 4 when using C#/.NET. Use Godot 3 to target Web with C#/Mono instead.") + "\n";
+-	r_error += TTR("If this project does not use C#, use a non-C# editor build to export the project.") + "\n";
+-	return false;
+-#else
++	// LeanCLR M0: the private helper accepts an explicit staged payload only.
++	if (OS::get_singleton()->get_environment("GODOT_LEANCLR_M0_STAGE").is_empty()) {
++		// Don't check for additional errors, as this particular error cannot be resolved.
++		r_error += TTR("Exporting to Web is currently not supported in Godot 4 when using C#/.NET. Use Godot 3 to target Web with C#/Mono instead.") + "\n";
++		r_error += TTR("If this project does not use C#, use a non-C# editor build to export the project.") + "\n";
++		return false;
++	}
++#endif
+ 
+ 	String err;
+ 	bool valid = false;
+@@ -459,7 +462,6 @@
+ 	}
+ 
+ 	return valid;
+-#endif // !MODULE_MONO_ENABLED
+ }
+ 
+ bool EditorExportPlatformWeb::has_valid_project_configuration(const Ref<EditorExportPreset> &p_preset, String &r_error) const {
+--- a/modules/mono/editor/GodotTools/GodotTools/Export/ExportPlugin.cs
++++ b/modules/mono/editor/GodotTools/GodotTools/Export/ExportPlugin.cs
+@@ -29,6 +29,8 @@
+ 
+         public override string[] _GetExportFeatures(EditorExportPlatform platform, bool debug)
+         {
++            if (!string.IsNullOrEmpty(LeanClrM0Stage))
++                return new string[] { "leanclr_m0" };
+             if (!ProjectContainsDotNet())
+                 return Array.Empty<string>();
+ 
+@@ -170,6 +172,9 @@
+         private void _ExportBeginImpl(string[] features, bool isDebug, string path, long flags)
+         {
+             _ = flags; // Unused.
++
++            if (ExportLeanClrM0())
++                return;
+ 
+             if (!ProjectContainsDotNet())
+                 return;

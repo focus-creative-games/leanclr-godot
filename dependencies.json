@@ -1,7 +1,9 @@
 {
   "godot": {
+    "repository": "https://github.com/godotengine/godot.git",
     "version": "4.7.2.stable",
-    "commit": "ed1daf0bf"
+    "commit": "ed1daf0bf001b61586d9930840f2f1394092c079",
+    "archive_sha256": "e607e9985e1c201bc9cdc1aec8a120f0c3f53b9603f1f828e2b748534a2471ef"
   },
   "godot-cpp": {
     "repository": "https://github.com/godotengine/godot-cpp.git",
@@ -12,7 +14,7 @@
     "repository": "https://github.com/focus-creative-games/leanclr.git",
     "path": "extern/leanclr",
     "branch": "coreclr-minimal",
-    "commit": "7d9a431eb1313f9f61bc1b3b1bdfcdc5ea95ce48",
+    "commit": "b19308a21dae8c58d3ec4fb7e850e24a565d47f1",
     "profile": "CORECLR_NET10"
   },
   "corelib": {

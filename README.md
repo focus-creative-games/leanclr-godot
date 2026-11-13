@@ -6,6 +6,10 @@
 
 当前范围是 Windows x64 和单线程 WebAssembly32。它提供运行时宿主与固定缓冲区协议，尚未实现 GodotSharp、C# 脚本挂载、编辑器 Tool 脚本、线程或程序集热重载。
 
+官方 .NET 开发、LeanCLR 发布的 [M0 验证记录](docs/m0-validation.md) 已完成：Windows/Wasm 公共 ABI、嵌套回调与 GC 验证通过，专用 headless 工具已验证 Windows/Web 导出原型。
+
+后续正式架构采用“官方 Godot .NET 编辑器开发调试，LeanCLR 仅用于发布”。技术方案及阶段门槛见 [Godot .NET 开发与 LeanCLR 发布](docs/dotnet-development-leanclr-publishing.md)。M0 原型标记 `runtime_ready=false`；真实 C# 节点的 LeanCLR 发布 backend 和运行模板属于 M1。
+
 ## 依赖
 
 - Godot 4.7.2 标准版，本机默认路径为相邻目录 `v4.7.2-stable_win64`。
