@@ -2,6 +2,8 @@
 
 通过 GDExtension 将 upstream LeanCLR `coreclr-minimal` 集成到标准 Godot 4.7.2，运行“C# 玩法＋Godot 呈现”的最小 demo。无需 Godot 引擎源码。
 
+[LeanCLR](https://github.com/focus-creative-games/leanclr) 是一个使用 C++17 实现的轻量级、跨平台 CLR 运行时，面向将 C# 逻辑嵌入游戏、应用和其他原生宿主的场景，支持泛型、异常、反射和委托等核心能力。本项目通过 LeanCLR 的公共宿主接口运行 C# 玩法逻辑，由 Godot 负责输入与呈现。构建、集成及互操作说明见 [LeanCLR 官方文档](https://doc.leanclr.com)。
+
 当前范围是 Windows x64 和单线程 WebAssembly32。它提供运行时宿主与固定缓冲区协议，尚未实现 GodotSharp、C# 脚本挂载、编辑器 Tool 脚本、线程或程序集热重载。
 
 ## 依赖
@@ -32,11 +34,11 @@ python tools/prepare_dependencies.py
 ../v4.7.2-stable_win64/Godot_v4.7.2-stable_win64_console.exe --path demo
 ```
 
-默认使用 `extern/leanclr`。需要改用其他 LeanCLR 目录时：
+默认使用 `extern/leanclr`。需要改用其他 LeanCLR 目录时，可使用相对于本仓库根目录的路径，例如将源码放在相邻的 `leanclr` 目录中：
 
 ```powershell
-./tools/build.ps1 -Target native -RuntimeSource "D:/workspace/wasmclr/leanclr-coreclr-minimal"
-./tools/build.ps1 -Target web -RuntimeSource "D:/workspace/wasmclr/leanclr-coreclr-minimal"
+./tools/build.ps1 -Target native -RuntimeSource "../leanclr"
+./tools/build.ps1 -Target web -RuntimeSource "../leanclr"
 ```
 
 直接调用 CMake 时仍可设置 `-DLEANCLR_SOURCE_DIR=<其他目录>`；直接运行托管准备工具时可传 `--runtime-source <其他目录>`。使用外部目录不要求初始化 LeanCLR submodule。CMake 会保留已有缓存中的路径，切换目录时需显式传入覆盖值；`build.ps1` 会在每次构建时传入所选路径。
