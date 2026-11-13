@@ -16,3 +16,7 @@
 /samples/dotnet/NuGet.Config
 /samples/dotnet/bin/
 /samples/dotnet/obj/
+/samples/semantics/.godot/
+/samples/semantics/NuGet.Config
+/samples/semantics/bin/
+/samples/semantics/obj/

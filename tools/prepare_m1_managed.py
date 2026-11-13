@@ -1,5 +1,6 @@
 """Build isolated publication assemblies from official GodotSharp and sample sources."""
 import argparse
+import json
 from pathlib import Path
 import shutil
 import subprocess
@@ -7,6 +8,7 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--godot-mono', type=Path, default=ROOT.parent / 'Godot_v4.7.2-stable_mono_win64')
+parser.add_argument('--sample', type=Path, default=ROOT / 'samples/dotnet')
 args = parser.parse_args()
 build = ROOT / 'build/m1'
 build.mkdir(parents=True, exist_ok=True)
@@ -67,6 +69,9 @@ bridge_text = bridge_text[:body_start] + '''                if (argCount != 0)
                 PublicationConstruction.Construct(scriptType, godotObject, _publishedFactories[scriptType]);
 ''' + bridge_text[body_end:]
 script_bridge.write_text(bridge_text, encoding='utf-8')
+disposables = stage / 'Core/DisposablesTracker.cs'
+disposables.write_text(disposables.read_text().replace('                OnGodotShuttingDownImpl();',
+    '                GC.Collect();\n                GC.WaitForPendingFinalizers();\n                OnGodotShuttingDownImpl();'), encoding='utf-8')
 # A returned native function address has pointer ABI; retaining its nested
 # function-pointer metadata is outside the current LeanCLR calli contract.
 native = stage / 'Core/NativeInterop/NativeFuncs.cs'
@@ -123,7 +128,14 @@ public static unsafe class AdditionalSignatures {
 subprocess.run(['dotnet', 'build', str(fixture / 'Signatures.csproj'), '-c', 'Release', '--nologo'], check=True)
 game = build / 'managed/Gameplay'
 game.mkdir(parents=True, exist_ok=True)
-shutil.copyfile(ROOT / 'samples/dotnet/Player.cs', game / 'Player.cs')
+source_files = sorted(args.sample.glob('*.cs'))
+if not source_files:
+    raise RuntimeError('No script source files in sample')
+for old in game.glob('*.cs'):
+    if old.name not in {path.name for path in source_files}:
+        old.unlink()
+for source_file in source_files:
+    shutil.copyfile(source_file, game / source_file.name)
 public_analyzer = ROOT / 'extern/godot/modules/mono/editor/Godot.NET.Sdk/Godot.SourceGenerators/bin/Debug/netstandard2.0/Godot.SourceGenerators.dll'
 (game / 'Gameplay.csproj').write_text(f'''<Project Sdk="Microsoft.NET.Sdk">
  <PropertyGroup><TargetFramework>net10.0</TargetFramework><GodotProjectDir>{game.as_posix()}/</GodotProjectDir><AllowUnsafeBlocks>true</AllowUnsafeBlocks></PropertyGroup>
@@ -135,6 +147,16 @@ subprocess.run(['dotnet', 'build', str(game / 'Gameplay.csproj'), '-c', 'Release
 bootstrap = build / 'managed/Bootstrap'
 bootstrap.mkdir(parents=True, exist_ok=True)
 shutil.copyfile(ROOT / 'managed/m1/Bootstrap.cs', bootstrap / 'Bootstrap.cs')
+inspector = ROOT / 'tools/managed-info/bin/Release/net10.0/ManagedInfo.dll'
+subprocess.run(['dotnet', 'build', str(ROOT / 'tools/managed-info/ManagedInfo.csproj'), '-c', 'Release', '--nologo'], check=True)
+scripts = json.loads(subprocess.check_output(['dotnet', str(inspector), '--scripts', str(game / 'bin/Release/net10.0/Gameplay.dll')], text=True))
+registration = ['namespace LeanClr { public static partial class Bootstrap { static partial void RegisterScripts() {']
+for script in scripts:
+    factory = 'null' if script['abstractType'] else '() => new global::' + script['type'] + '()'
+    registration.append(f'Godot.Bridge.ScriptManagerBridge.RegisterPublishedScript(typeof(global::{script["type"]}), {json.dumps(script["path"])}, {factory});')
+registration.append('} } }')
+(bootstrap / 'Registration.cs').write_text('\n'.join(registration), encoding='utf-8')
+(build / 'scripts.json').write_text(json.dumps(scripts, indent=2) + '\n', encoding='utf-8')
 (bootstrap / 'Bootstrap.csproj').write_text(f'''<Project Sdk="Microsoft.NET.Sdk">
  <PropertyGroup><TargetFramework>net10.0</TargetFramework><AssemblyName>LeanClr.Bootstrap</AssemblyName></PropertyGroup>
  <ItemGroup><Reference Include="GodotSharp"><HintPath>{stage.as_posix()}/bin/Release/net10.0/GodotSharp.dll</HintPath></Reference>

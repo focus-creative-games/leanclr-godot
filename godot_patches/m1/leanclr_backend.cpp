@@ -20,6 +20,7 @@ extern "C" const void *leanclr_godot_m1_modules();
 namespace leanclr_godot {
 namespace {
 LeanclrEngineSession *session = nullptr;
+uint64_t owner_thread = 0;
 std::array<const LeanclrMethodInfo *, 37> methods{};
 std::array<const char *, 37> method_names{};
 
@@ -61,6 +62,9 @@ struct Callback;
 template <size_t Index, typename R, typename... A>
 struct Callback<Index, R(GD_CLR_STDCALL *)(A...)> {
 	static R GD_CLR_STDCALL invoke(A... arguments) {
+		if (thread_id(nullptr) != owner_thread) {
+			fail("owner-thread contract");
+		}
 		static_assert(((sizeof(A) <= 8) && ...), "M1 callbacks accept scalar/pointer arguments only");
 		std::array<uint64_t, sizeof...(A) + 1> slots{};
 		uint64_t result = 0;
@@ -98,6 +102,7 @@ bool bind(size_t index, LeanclrModuleDef *module, const char *type, const char *
 } // namespace
 
 bool initialize() {
+	owner_thread = thread_id(nullptr);
 	LeanclrEngineConfig config{};
 	config.size = sizeof(config);
 	config.abi_version = LEANCLR_ENGINE_ABI_VERSION;

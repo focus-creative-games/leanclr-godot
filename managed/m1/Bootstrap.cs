@@ -4,7 +4,7 @@ using Godot.NativeInterop;
 
 namespace LeanClr
 {
-    public static class Bootstrap
+    public static partial class Bootstrap
     {
         public static void Initialize() { }
         public static void Tick(float delta) { }
@@ -18,7 +18,7 @@ namespace LeanClr
                 NativeFuncs.Initialize(functions, size);
                 AlcReloadCfg.Configure(false);
                 Console.WriteLine("LEANCLR_ATTACH script-registration");
-                ScriptManagerBridge.RegisterPublishedScript(typeof(Player), "res://Player.cs", () => new Player());
+                RegisterScripts();
                 Console.WriteLine("LEANCLR_ATTACH ready");
             }
             catch (Exception exception)
@@ -28,5 +28,6 @@ namespace LeanClr
                 throw;
             }
         }
+        static partial void RegisterScripts();
     }
 }

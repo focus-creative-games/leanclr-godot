@@ -1,6 +1,7 @@
 param(
     [string]$RuntimeSource = (Join-Path $PSScriptRoot '../extern/leanclr'),
     [string]$GodotMono = (Join-Path $PSScriptRoot '../../Godot_v4.7.2-stable_mono_win64'),
+    [string]$Sample = (Join-Path $PSScriptRoot '../samples/dotnet'),
     [int]$Jobs = 8
 )
 $ErrorActionPreference = 'Stop'
@@ -9,10 +10,15 @@ $RuntimeSource = (Resolve-Path $RuntimeSource).Path
 $log = "$root/build/m1"
 New-Item -ItemType Directory -Force $log | Out-Null
 function Run([string]$program, [string[]]$arguments, [string]$name) {
-    & $program @arguments *> "$log/$name.log"
-    if ($LASTEXITCODE -ne 0) { throw "$program failed: $LASTEXITCODE (see $log/$name.log)" }
+    $savedPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        & $program @arguments *> "$log/$name.log"
+        $code = $LASTEXITCODE
+    } finally { $ErrorActionPreference = $savedPreference }
+    if ($code -ne 0) { throw "$program failed: $code (see $log/$name.log)" }
 }
-Run 'python' @("$PSScriptRoot/prepare_m1_managed.py", '--godot-mono', $GodotMono) 'managed-build'
+Run 'python' @("$PSScriptRoot/prepare_m1_managed.py", '--godot-mono', $GodotMono, '--sample', $Sample) 'managed-build'
 Run 'dotnet' @('build', "$RuntimeSource/src/leanaot/LeanAOT/LeanAOT.csproj", '-c', 'Release', '--nologo') 'leanaot-build'
 $aot = "$RuntimeSource/out/dotnet/LeanAOT/Release/net8.0/LeanAOT.dll"
 Run 'dotnet' @($aot, '--leanaot-runtime-api-profile', 'coreclr-net10',
@@ -39,7 +45,7 @@ try {
     Run 'python' @('-m', 'SCons', '-C', $godot, 'platform=windows', 'target=template_release', 'arch=x86_64',
         'module_mono_enabled=yes', 'modules_enabled_by_default=no', 'module_gdscript_enabled=yes', 'module_freetype_enabled=yes',
         'module_svg_enabled=yes', 'module_text_server_fb_enabled=yes', 'module_godot_physics_2d_enabled=yes',
-        'vulkan=no', 'opengl3=yes', 'd3d12=no', 'debug_symbols=no', 'optimize=none', 'use_lto=no', 'extra_suffix=leanclr_m1', "-j$Jobs") 'template-build'
+        'vulkan=no', 'opengl3=yes', 'd3d12=no', 'accesskit=no', 'angle=no', 'debug_symbols=no', 'optimize=none', 'use_lto=no', 'extra_suffix=leanclr_m1', "-j$Jobs") 'template-build'
 } finally {
     $env:PYTHONPATH = $previousPythonPath
     $env:LEANCLR_GODOT_RUNTIME = $previousRuntime

@@ -1,6 +1,6 @@
 # Godot .NET 开发与 LeanCLR 发布技术方案
 
-日期：2026 年 11 月 13 日。状态：M0、M1 已完成，持续实施至 M5。本轮平台范围按用户要求收敛为 Win64、HTML5 和 Android；Android 使用 MuMu `localhost:7555` 验收，其他平台暂不纳入退出门槛。实测结果见 [M0](m0-validation.md)、[M1](m1-validation.md)。
+日期：2026 年 11 月 13 日。状态：M0、M1、M2 已完成，持续实施至 M5。本轮平台范围按用户要求收敛为 Win64、HTML5 和 Android；Android 使用 MuMu `localhost:7555` 验收，其他平台暂不纳入退出门槛。实测结果见 [M0](m0-validation.md)、[M1](m1-validation.md)。
 
 ## 目标与架构决策
 

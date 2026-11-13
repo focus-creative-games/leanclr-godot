@@ -11,20 +11,26 @@ ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--helper', type=Path, default=ROOT / 'extern/godot/bin/godot.windows.editor.x86_64.leanclr_m0.mono.console.exe')
 parser.add_argument('--template', type=Path, default=ROOT / 'extern/godot/bin/godot.windows.template_release.x86_64.leanclr_m1.mono.exe')
+parser.add_argument('--sample', type=Path, default=ROOT / 'samples/dotnet')
+parser.add_argument('--output', type=Path, default=ROOT / 'build/export/m1/windows')
 args = parser.parse_args()
-sample = ROOT / 'samples/dotnet'
+sample = args.sample.resolve()
 build = ROOT / 'build/m1'
-stage = build / 'export-project'
-payload = build / 'payload'
-output = ROOT / 'build/export/m1/windows'
+stage = build / ('export-project-' + sample.name)
+payload = build / ('payload-' + sample.name)
+output = args.output.resolve()
 for directory in (stage, payload, output):
     directory.mkdir(parents=True, exist_ok=True)
 lock = json.loads((ROOT / 'dependencies.json').read_text())
-protected = [*sample.glob('*.cs'), *sample.glob('*.tscn'), sample / 'project.godot', sample / 'Gameplay.csproj']
+protected = [*sample.glob('*.cs'), *sample.glob('*.tscn'), *sample.glob('*.tres'), sample / 'project.godot', sample / 'Gameplay.csproj']
 before = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in protected}
-for pattern in ('*.cs', '*.uid', '*.tscn', '*.csproj', '*.sln', 'project.godot', 'NuGet.Config'):
+for pattern in ('*.cs', '*.uid', '*.tscn', '*.tres', '*.csproj', '*.sln', 'project.godot', 'NuGet.Config'):
     for source in sample.glob(pattern):
         shutil.copyfile(source, stage / source.name)
+for pattern in ('*.cs', '*.uid', '*.tscn', '*.tres', '*.csproj', '*.sln'):
+    for old in stage.glob(pattern):
+        if not (sample / old.name).is_file():
+            old.unlink()
 shutil.copytree(sample / '.godot/mono', stage / '.godot/mono', dirs_exist_ok=True)
 roots = [build / f'managed/{project}/bin/Release/net10.0/{name}.dll' for project, name in
          [('Bootstrap', 'LeanClr.Bootstrap'), ('Gameplay', 'Gameplay'), ('GodotSharp', 'GodotSharp')]]
