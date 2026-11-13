@@ -35,7 +35,7 @@
          public override string[] _GetExportFeatures(EditorExportPlatform platform, bool debug)
          {
 +            if (!string.IsNullOrEmpty(LeanClrM0Stage))
-+                return new string[] { "leanclr_m0" };
++                return GetLeanClrExportFeatures();
              if (!ProjectContainsDotNet())
                  return Array.Empty<string>();
  

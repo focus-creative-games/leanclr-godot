@@ -5,6 +5,6 @@
   },
   "modules/mono/editor/GodotTools/GodotTools/Export/ExportPlugin.cs": {
     "before": "eee99c42ecfb5f6bd689760d8be268b0af761b03ca55e0f53cef69cc52e3771f",
-    "after": "024d2237847977d0b8fd0ee38628f1a3add2de0c6f7963039a9870839b1a7c60"
+    "after": "817fb48c9da0ec35b0d93bd6739def3ac31ed6d8fe6d5fc67e294ad967c46bca"
   }
 }
