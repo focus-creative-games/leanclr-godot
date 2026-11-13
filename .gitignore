@@ -8,6 +8,8 @@
 /demo/managed/**/*.bytes
 /demo/managed/**/provenance.json
 /tools/__pycache__/
+/tools/managed-info/bin/
+/tools/managed-info/obj/
 /tools/templates-tail.bin
 /samples/dotnet/.godot/
 /samples/dotnet/.nuget/
