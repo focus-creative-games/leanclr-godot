@@ -49,3 +49,14 @@
  
              if (!ProjectContainsDotNet())
                  return;
+--- a/platform/android/export/export_plugin.cpp
++++ b/platform/android/export/export_plugin.cpp
+@@ -2941,7 +2941,7 @@
+ 	// Android export is still a work in progress, keep a message as a warning.
+ 	err += TTR("Exporting to Android when using C#/.NET is experimental.") + "\n";
+ 
+-	if (!gradle_build_enabled) {
++	if (!gradle_build_enabled && OS::get_singleton()->get_environment("GODOT_LEANCLR_M0_STAGE").is_empty()) {
+ 		// For template exports we only support .NET 9 because the template
+ 		// includes .jar dependencies that may only be compatible with .NET 9.
+ 		if (!_validate_dotnet_tfm("net9.0", err)) {

@@ -6,5 +6,9 @@
   "modules/mono/editor/GodotTools/GodotTools/Export/ExportPlugin.cs": {
     "before": "eee99c42ecfb5f6bd689760d8be268b0af761b03ca55e0f53cef69cc52e3771f",
     "after": "817fb48c9da0ec35b0d93bd6739def3ac31ed6d8fe6d5fc67e294ad967c46bca"
+  },
+  "platform/android/export/export_plugin.cpp": {
+    "before": "b00c8a24eeedff494441a9220270458c5d49261be78ae57a3473445c03aa07f8",
+    "after": "aba6f3adcd7c90fea7fb90247029bbfd7c6280a402e673efe1bfbec0ff3da25a"
   }
 }

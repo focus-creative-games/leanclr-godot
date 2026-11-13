@@ -1,0 +1,38 @@
+--- a/src/runtime/vm/calli_native.cpp
++++ b/src/runtime/vm/calli_native.cpp
+@@ -253,7 +253,7 @@
+         RET_ERR(RtErr::NotSupported);
+     if (c != RtSigType::C && c != RtSigType::StdCall)
+         RET_ERR(RtErr::NotSupported);
+-#if (defined(_WIN32) && defined(_M_X64)) || (defined(__EMSCRIPTEN__) && UINTPTR_MAX == UINT32_MAX) || \
++#if (defined(_WIN32) && defined(_M_X64)) || (defined(__ANDROID__) && defined(__x86_64__)) || (defined(__EMSCRIPTEN__) && UINTPTR_MAX == UINT32_MAX) || \
+     (defined(LEANCLR_CALLI_ABI_PROBE) && LEANCLR_CALLI_ABI_PROBE)
+     // Both spellings use the platform C ABI here. Other ABIs require their own tests.
+     RET_OK(uint8_t(1));
+--- a/src/runtime/bcl/coreclr-net10/platform/kernel32.cpp
++++ b/src/runtime/bcl/coreclr-net10/platform/kernel32.cpp
+@@ -520,7 +520,13 @@
+     timeval times[2];
+     times[0] = info.LastAccessTime > 0 ? file_time_to_timeval(info.LastAccessTime) : file_time_to_timeval(stat_access_time(st));
+     times[1] = info.LastWriteTime > 0 ? file_time_to_timeval(info.LastWriteTime) : file_time_to_timeval(stat_write_time(st));
++#if defined(__ANDROID__)
++    const timespec precise_times[2] = {{times[0].tv_sec, static_cast<long>(times[0].tv_usec) * 1000},
++                                       {times[1].tv_sec, static_cast<long>(times[1].tv_usec) * 1000}};
++    if (::futimens(fd, precise_times) != 0)
++#else
+     if (::futimes(fd, times) != 0)
++#endif
+     {
+         set_last_error_from_errno(errno);
+         return false;
+--- a/src/runtime/bcl/coreclr-net10/platform/rt_sys.cpp
++++ b/src/runtime/bcl/coreclr-net10/platform/rt_sys.cpp
+@@ -1096,7 +1096,7 @@
+     if (rc != 0)
+         return nullptr;
+     return buffer;
+-#elif defined(__GLIBC__)
++#elif defined(__GLIBC__) || (defined(__ANDROID__) && defined(_GNU_SOURCE))
+     char* msg = ::strerror_r(error, out, static_cast<size_t>(buffer_size));
+     if (msg == nullptr)
+         return nullptr;

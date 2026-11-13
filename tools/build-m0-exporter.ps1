@@ -19,7 +19,7 @@ if (-not (Test-Path "$root/.tools/scons/SCons/__init__.py")) {
 Run 'python' @("$PSScriptRoot/prepare_m0_exporter.py") "$logs/prepare-exporter.log"
 $formatter = "$root/extern/leanclr/tools/clang-format/clang-format.exe"
 if (-not (Test-Path $formatter)) { throw 'The pinned LeanCLR clang-format tool is required.' }
-Run $formatter @('-i', "--style=file:$source/.clang-format", "$source/platform/web/export/export_plugin.cpp") "$logs/format-exporter.log"
+Run $formatter @('-i', "--style=file:$source/.clang-format", "$source/platform/web/export/export_plugin.cpp", "$source/platform/android/export/export_plugin.cpp") "$logs/format-exporter.log"
 $savedPythonPath = $env:PYTHONPATH
 try {
     $env:PYTHONPATH = "$root/.tools/scons"
