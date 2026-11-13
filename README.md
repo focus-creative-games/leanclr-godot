@@ -1,6 +1,10 @@
 # LeanCLR Godot
 
-通过 GDExtension 将 upstream LeanCLR `coreclr-minimal` 集成到标准 Godot 4.7.2，运行“C# 玩法＋Godot 呈现”的最小 demo。无需 Godot 引擎源码。
+使用官方 Godot 4.7.2 .NET 编辑器开发和调试 C#，发布后由 upstream LeanCLR `coreclr-minimal` 执行同一份玩法源码。Win64、HTML5 和 Android x64（MuMu）已完成 M0–M5 的本轮验收。
+
+统一发布命令、可选编辑器菜单和模板包见 [发布 SDK](docs/publication-sdk.md)，结果与性能边界见 [M4 / M5 验收记录](docs/m5-validation.md)。本轮验证的是明确的样例 API 范围，未宣称完整 Godot / .NET API 或 Android ARM64 支持。
+
+原有 GDExtension 极简 demo 保留用于底层回归；它可直接使用标准 Godot 发布程序。正式 C# Node2D 路线使用专用引擎模板，构建需要固定版本 Godot 源码。
 
 [LeanCLR](https://github.com/focus-creative-games/leanclr) 是一个使用 C++17 实现的轻量级、跨平台 CLR 运行时，面向将 C# 逻辑嵌入游戏、应用和其他原生宿主的场景，支持泛型、异常、反射和委托等核心能力。本项目通过 LeanCLR 的公共宿主接口运行 C# 玩法逻辑，由 Godot 负责输入与呈现。构建、集成及互操作说明见 [LeanCLR 官方文档](https://doc.leanclr.com)。
 
@@ -8,13 +12,15 @@
 
 官方 .NET 开发、LeanCLR 发布的 [M0 验证记录](docs/m0-validation.md) 已完成：Windows/Wasm 公共 ABI、嵌套回调与 GC 验证通过，专用 headless 工具已验证 Windows/Web 导出原型。
 
-后续正式架构采用“官方 Godot .NET 编辑器开发调试，LeanCLR 仅用于发布”。技术方案及阶段门槛见 [Godot .NET 开发与 LeanCLR 发布](docs/dotnet-development-leanclr-publishing.md)。M0 原型标记 `runtime_ready=false`；真实 C# 节点的 LeanCLR 发布 backend 和运行模板属于 M1。
+正式架构采用“官方 Godot .NET 编辑器开发调试，LeanCLR 仅用于发布”。技术方案及阶段门槛见 [Godot .NET 开发与 LeanCLR 发布](docs/dotnet-development-leanclr-publishing.md)。M0 原型标记 `runtime_ready=false`；真实 C# 节点的 LeanCLR 发布 backend 和运行模板已在 M1–M5 验证。
 
 [M1 Windows Node2D](docs/m1-validation.md) 已跑通：同一份 C# 在官方 .NET 编辑器开发，发布 EXE 由 LeanCLR 执行，并验证输入、GC、属性和实际绘制。本轮后续平台验收范围为 Win64、HTML5、Android（MuMu localhost:7555）。
 
 [M2 语义契约](docs/m2-validation.md) 已通过 Windows x64 对比验收，覆盖同步信号、资源、集合、实例化和生命周期，三次独立进程均无退出资源泄漏。
 
 [M3 HTML5](docs/m3-validation.md) 已通过 Chrome/WebGL2 验收，包含 Node2D 真实键盘移动、15 项语义契约与页面刷新重建运行时。
+
+[M4 Android](docs/m4-android-validation.md) 和 [M5](docs/m5-validation.md) 已完成：九组平台／工程验收、三平台混合 AOT、26 项语义／扩展契约、160 MiB GC 压力及发布拒绝检查通过。新增源码配置需显式实验发布并补充测试。
 
 ## 依赖
 

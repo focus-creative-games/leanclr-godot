@@ -1,6 +1,6 @@
 # Godot .NET 开发与 LeanCLR 发布技术方案
 
-日期：2026 年 11 月 13 日。状态：M0、M1、M2、M3 已完成，持续实施至 M5。本轮平台范围按用户要求收敛为 Win64、HTML5 和 Android；Android 使用 MuMu `localhost:7555` 验收，其他平台暂不纳入退出门槛。实测结果见 [M0](m0-validation.md)、[M1](m1-validation.md)。
+日期：2026 年 11 月 14 日。状态：M0–M5 已按本轮验收范围完成。本轮平台为 Win64、HTML5 和 Android x64；Android 使用 MuMu `localhost:7555`，其他平台与 ARM64 不在本轮退出门槛内。实测范围、性能预算和现有限制见 [M4 / M5 验收记录](m5-validation.md)；发布方式见 [SDK](publication-sdk.md)。
 
 ## 目标与架构决策
 
@@ -255,7 +255,7 @@ M0 首先验证是否只需在工具私有目录部署适配版 GodotTools 即�
 | WebAssembly32 | 内建 LeanCLR 的定制 Web 模板、PCK、32 位 BCL；真浏览器、内存增长和缓存 |
 | Linux x64／ARM64 | 编译器、SysV/ARM ABI、库依赖与资源路径 |
 | macOS x64／ARM64 | 架构切片、链接、签名和资源目录 |
-| Android ARM64 | 原生库、APK/AAB、资源加载、后台恢复与进程重建 |
+| Android x64（本轮）／ARM64（后续） | 本轮以 MuMu APK 验证资源加载、后台恢复与进程重建；ARM64、AAB 和商店签名单独验收 |
 | iOS ARM64 | 模板链接／嵌入方式、签名、设备执行与系统生命周期 |
 
 正式 Web 模板将脚本系统和 LeanCLR 一同编译进 Godot，不再依赖当前 demo 的 GDExtension 侧模块作为唯一运行时入口。需要统一 Emscripten、内存增长、异常模型和线程配置；不能把不同工具链的主模块直接拼装。
@@ -307,4 +307,4 @@ M0 的公共 API 正确性和导出链路是两个前置条件，不能等到生
 
 先完成 M0 与 M1 所需的最小闭环：准备官方 Godot 4.7.2 .NET 开发样例与对应源码，审计并修复 LeanCLR 公共 invoker ABI，验证一组标量／结构体／异常／嵌套回调，跑通专用导出工具，再制作 Windows LeanCLR 模板加载一个真正的 C# Node2D 脚本。
 
-M0 已更新官方 LeanCLR submodule、验证修复后的公共 ABI，并以独立 Godot 源码副本构建专用 headless 导出工具，完成 Windows/Web 导出原型验证。官方开发编辑器和 LeanCLR 核心源码保持原样；GodotSharp 发布适配及真实脚本运行模板按 M1 继续实施。
+M0–M5 已按本轮三个平台和已执行的 API 配置完成。官方开发编辑器与 LeanCLR submodule 保持原样；专用模板、发布版 GodotSharp、静态脚本工厂、桥接目录、混合 AOT、完整 IL／元数据保留及兼容性拒绝流程已有实现。Android 三个必要修复保存在构建副本及补丁中。后续新增平台、API、项目布局或裁剪策略必须扩展验证配置，不能由当前样例的成功直接推导。
