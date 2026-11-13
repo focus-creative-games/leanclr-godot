@@ -22,3 +22,8 @@
 /samples/semantics/NuGet.Config
 /samples/semantics/bin/
 /samples/semantics/obj/
+/samples/extended/.godot/
+/samples/extended/NuGet.Config
+/samples/extended/bin/
+/samples/extended/obj/
+/samples/editor-check/
