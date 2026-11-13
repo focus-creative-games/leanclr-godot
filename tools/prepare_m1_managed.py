@@ -137,10 +137,16 @@ for old in game.glob('*.cs'):
 for source_file in source_files:
     shutil.copyfile(source_file, game / source_file.name)
 public_analyzer = ROOT / 'extern/godot/modules/mono/editor/Godot.NET.Sdk/Godot.SourceGenerators/bin/Debug/netstandard2.0/Godot.SourceGenerators.dll'
+logic = build / 'managed/DemoLogic'
+logic.mkdir(parents=True, exist_ok=True)
+shutil.copyfile(ROOT / 'managed/DemoLogic/Motion.cs', logic / 'Motion.cs')
+(logic / 'DemoLogic.csproj').write_text('<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>', encoding='utf-8')
+subprocess.run(['dotnet', 'build', str(logic / 'DemoLogic.csproj'), '-c', 'Release', '--nologo'], check=True)
 (game / 'Gameplay.csproj').write_text(f'''<Project Sdk="Microsoft.NET.Sdk">
  <PropertyGroup><TargetFramework>net10.0</TargetFramework><GodotProjectDir>{game.as_posix()}/</GodotProjectDir><AllowUnsafeBlocks>true</AllowUnsafeBlocks></PropertyGroup>
  <ItemGroup><CompilerVisibleProperty Include="GodotProjectDir" />
  <Reference Include="GodotSharp"><HintPath>{stage.as_posix()}/bin/Release/net10.0/GodotSharp.dll</HintPath></Reference>
+ <Reference Include="DemoLogic"><HintPath>{logic.as_posix()}/bin/Release/net10.0/DemoLogic.dll</HintPath></Reference>
  <Analyzer Include="{public_analyzer.as_posix()}" /><AssemblyMetadata Include="M0Revision" Value="1" /></ItemGroup>
 </Project>''', encoding='utf-8')
 subprocess.run(['dotnet', 'build', str(game / 'Gameplay.csproj'), '-c', 'Release', '--nologo'], check=True)
@@ -158,7 +164,7 @@ registration.append('} } }')
 (bootstrap / 'Registration.cs').write_text('\n'.join(registration), encoding='utf-8')
 (build / 'scripts.json').write_text(json.dumps(scripts, indent=2) + '\n', encoding='utf-8')
 (bootstrap / 'Bootstrap.csproj').write_text(f'''<Project Sdk="Microsoft.NET.Sdk">
- <PropertyGroup><TargetFramework>net10.0</TargetFramework><AssemblyName>LeanClr.Bootstrap</AssemblyName></PropertyGroup>
+ <PropertyGroup><TargetFramework>net10.0</TargetFramework><AssemblyName>LeanClr.Bootstrap</AssemblyName><AllowUnsafeBlocks>true</AllowUnsafeBlocks></PropertyGroup>
  <ItemGroup><Reference Include="GodotSharp"><HintPath>{stage.as_posix()}/bin/Release/net10.0/GodotSharp.dll</HintPath></Reference>
  <Reference Include="Gameplay"><HintPath>{game.as_posix()}/bin/Release/net10.0/Gameplay.dll</HintPath></Reference></ItemGroup>
 </Project>''', encoding='utf-8')

@@ -16,6 +16,7 @@
 #include <type_traits>
 
 extern "C" const void *leanclr_godot_m1_modules();
+extern "C" void leanclr_godot_aot_report();
 
 namespace leanclr_godot {
 namespace {
@@ -23,11 +24,28 @@ LeanclrEngineSession *session = nullptr;
 uint64_t owner_thread = 0;
 std::array<const LeanclrMethodInfo *, 37> methods{};
 std::array<const char *, 37> method_names{};
+const LeanclrMethodInfo *report_exception = nullptr;
 
-[[noreturn]] void fail(const char *method) {
+[[noreturn]] void fail(const char *method, LeanclrException *exception = nullptr) {
+	print_line(String("LEANCLR_GODOT_FATAL managed boundary failed: ") + method);
+	if (exception && report_exception) {
+		uint64_t slots[3]{};
+		char16_t text[1024]{};
+		char16_t *buffer = text;
+		int32_t capacity = 1024;
+		size_t offset = 0;
+		auto *args = reinterpret_cast<LeanclrStackObject *>(slots);
+		leanclr_push_argument(args, &offset, &exception, sizeof(exception));
+		leanclr_push_argument(args, &offset, &buffer, sizeof(buffer));
+		leanclr_push_argument(args, &offset, &capacity, sizeof(capacity));
+		LeanclrException *report_error = nullptr;
+		leanclr_invoke_with_buffer(report_exception, args, nullptr, &report_error);
+		print_line(String("LEANCLR_MANAGED_EXCEPTION ") + String::utf16(text));
+	}
 	std::fprintf(stderr, "LEANCLR_GODOT_FATAL managed boundary failed: %s\n", method);
 	std::fflush(stderr);
-	std::exit(1);
+	// Static destruction would call Godot callbacks after VM caches are gone.
+	std::_Exit(1);
 }
 
 int32_t load_file(void *, const char *name, const char *extension, LeanclrEngineFile *out) {
@@ -74,7 +92,7 @@ struct Callback<Index, R(GD_CLR_STDCALL *)(A...)> {
 		LeanclrException *exception = nullptr;
 		leanclr_invoke_with_buffer(methods[Index], args, reinterpret_cast<LeanclrStackObject *>(&result), &exception);
 		if (exception) {
-			fail(method_names[Index]);
+			fail(method_names[Index], exception);
 		}
 		if constexpr (!std::is_void_v<R>) {
 			static_assert(sizeof(R) <= 8);
@@ -129,6 +147,7 @@ bool initialize() {
 	GDMonoCache::update_godot_api_cache(callbacks);
 	auto *bootstrap = leanclr_get_assembly("LeanClr.Bootstrap");
 	auto *klass = leanclr_get_class_by_name(leanclr_get_module_by_assembly(bootstrap), "LeanClr.Bootstrap", false, &exception);
+	report_exception = klass ? leanclr_get_class_method_by_name(klass, "ReportException", &exception) : nullptr;
 	const auto *attach = klass ? leanclr_get_class_method_by_name(klass, "Attach", &exception) : nullptr;
 	if (!attach || exception) {
 		return false;
@@ -153,6 +172,7 @@ void shutdown() {
 	if (session) {
 		LeanclrEngineError error{};
 		leanclr_engine_stop(session, &error);
+		leanclr_godot_aot_report();
 		session = nullptr;
 	}
 }

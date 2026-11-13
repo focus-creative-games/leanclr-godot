@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Reflection;
+using System.Diagnostics;
 
 public partial class Player : Node2D
 {
@@ -15,6 +16,14 @@ public partial class Player : Node2D
         smoke = Array.IndexOf(OS.GetCmdlineUserArgs(), "--m0-smoke") >= 0;
         instances++;
         if (smoke) Input.ActionPress("ui_right");
+        if (Array.IndexOf(OS.GetCmdlineUserArgs(), "--benchmark") >= 0)
+        {
+            _ = DemoLogic.Motion.Benchmark(10000);
+            long start = Stopwatch.GetTimestamp();
+            int checksum = DemoLogic.Motion.Benchmark(200000);
+            long elapsed = Stopwatch.GetTimestamp() - start;
+            GD.Print($"M5_BENCH ticks={elapsed} frequency={Stopwatch.Frequency} checksum={checksum} managed_bytes={GC.GetTotalMemory(false)}");
+        }
         if (smoke && (instances != 1 || Speed != 120))
         {
             GD.PrintErr("M0_DOTNET_FAIL initial state or exported property");
@@ -26,7 +35,9 @@ public partial class Player : Node2D
     {
         float direction = Input.GetAxis("ui_left", "ui_right");
         if (smoke && frames == 2) GC.Collect();
-        Position += new Vector2(direction * Speed * (float)(smoke ? 1.0 / 60 : delta), 0);
+        Vector2 position = Position;
+        position.X = DemoLogic.Motion.Step(position.X, direction, Speed, (float)(smoke ? 1.0 / 60 : delta));
+        Position = position;
         QueueRedraw();
         if (smoke && ++frames == 4)
         {

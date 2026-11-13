@@ -9,6 +9,13 @@ namespace LeanClr
         public static void Initialize() { }
         public static void Tick(float delta) { }
         public static void Shutdown() { }
+        public static unsafe void ReportException(Exception exception, char* buffer, int capacity)
+        {
+            string message = exception.GetType().FullName + ": " + exception.Message + "\n" + exception.StackTrace;
+            int count = Math.Min(message.Length, capacity - 1);
+            for (int i = 0; i < count; ++i) buffer[i] = message[i];
+            buffer[count] = '\0';
+        }
 
         public static void Attach(IntPtr functions, int size)
         {

@@ -15,7 +15,9 @@ if (-not $Visible) { $start.WindowStyle = 'Hidden' }
 $process = Start-Process @start
 $modules = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
 $watch = [Diagnostics.Stopwatch]::StartNew()
+$peakWorkingSet = 0L
 while (-not $process.HasExited) {
+    $peakWorkingSet = [Math]::Max($peakWorkingSet, $process.PeakWorkingSet64)
     try { foreach ($module in $process.Modules) { $null = $modules.Add($module.ModuleName) } } catch { }
     if ($watch.Elapsed.TotalSeconds -gt 30) { $process.Kill(); throw 'M1 smoke timed out' }
     $null = $process.WaitForExit(10)
@@ -31,7 +33,7 @@ foreach ($forbidden in @('coreclr.dll', 'hostfxr.dll', 'hostpolicy.dll', 'clr.dl
     if ($modules.Contains($forbidden)) { throw "Published process loaded $forbidden" }
 }
 $receipt = @{status='passed'; mode=$suffix; elapsed_ms=$watch.Elapsed.TotalMilliseconds;
-    peak_working_set=$process.PeakWorkingSet64; modules=@($modules | Sort-Object); executable=$Executable}
+    peak_working_set=$peakWorkingSet; modules=@($modules | Sort-Object); executable=$Executable}
 $receipt | ConvertTo-Json -Depth 4 | Set-Content "$root/build/m1/smoke-$suffix.json" -Encoding utf8
 Write-Host $text
 Write-Host "M1_SMOKE_OK mode=$suffix no_coreclr=true"

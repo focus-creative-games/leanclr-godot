@@ -5,6 +5,7 @@
     <M0Revision Condition="'$(M0Revision)' == ''">1</M0Revision>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="../../managed/DemoLogic/DemoLogic.csproj" />
     <AssemblyMetadata Include="M0Revision" Value="$(M0Revision)" />
   </ItemGroup>
 </Project>

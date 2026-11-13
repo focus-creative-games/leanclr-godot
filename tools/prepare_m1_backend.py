@@ -76,9 +76,19 @@ registry.write_text('''// Generated registry; no runtime object layout is consum
 #include "metadata/rt_metadata.h"
 extern const leanclr::metadata::RtCalliBridge g_calli_bridges[];
 extern const uint32_t g_calli_bridge_count;
+#ifdef LEANCLR_GODOT_GAMEPLAY_AOT
+extern leanclr::metadata::RtAotModulesData g_aot_modules_data;
+#endif
 extern "C" const void* leanclr_godot_m1_modules() {
+#ifdef LEANCLR_GODOT_GAMEPLAY_AOT
+ return &g_aot_modules_data;
+#else
  static const leanclr::metadata::RtAotModulesData data{nullptr, 0, nullptr, 0, g_calli_bridges, g_calli_bridge_count};
  return &data;
+#endif
 }
+#ifndef LEANCLR_GODOT_GAMEPLAY_AOT
+extern "C" void leanclr_godot_aot_report() {}
+#endif
 ''', encoding='utf-8')
 print('Prepared M1 backend and', len(fields), 'typed reverse callbacks')
