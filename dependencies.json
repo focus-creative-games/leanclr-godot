@@ -1,0 +1,29 @@
+{
+  "godot": {
+    "version": "4.7.2.stable",
+    "commit": "ed1daf0bf"
+  },
+  "godot-cpp": {
+    "repository": "https://github.com/godotengine/godot-cpp.git",
+    "commit": "507ed9d840c01a3c5b2a39af8bb4000bfac30bf5",
+    "archive_sha256": "30da4ac295997061a6af81ae531510efd4e6a86e506eb4466edc0898ef3fe048"
+  },
+  "leanclr": {
+    "repository": "https://github.com/focus-creative-games/leanclr.git",
+    "path": "extern/leanclr",
+    "branch": "coreclr-minimal",
+    "commit": "7d9a431eb1313f9f61bc1b3b1bdfcdc5ea95ce48",
+    "profile": "CORECLR_NET10"
+  },
+  "corelib": {
+    "version": "10.0.8",
+    "native_sha256": "5b6700e2802afdb2cc4863b096760a66442e89fd6ee5edb718c697ae5cf33ddc",
+    "wasm_sha256": "e0457d3ebff7ad8f87534d0163786c66f623b7118f2e82f22fa0e8b6d8f61a28"
+  },
+  "emscripten": {
+    "version": "4.0.20",
+    "sdk_commit": "e4fe26ef59168ff44f4c23c466e497bf60b3411e",
+    "release": "c387d7a7e9537d0041d2c3ae71b7538cc978104e",
+    "windows_archive_sha256": "388e9fab2bc9f94e85b1541e6ae0f1d9a5b9dfa9d756d89a0a3fc7acc052fbd5"
+  }
+}

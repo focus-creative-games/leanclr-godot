@@ -1,0 +1,8 @@
+[configuration]
+entry_symbol = "leanclr_godot_library_init"
+compatibility_minimum = "4.7"
+reloadable = false
+
+[libraries]
+windows.x86_64 = "bin/leanclr_godot.windows.x86_64.dll"
+web.wasm32 = "bin/libleanclr_godot.web.wasm"

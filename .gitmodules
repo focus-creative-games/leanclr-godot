@@ -1,0 +1,4 @@
+[submodule "leanclr"]
+	path = extern/leanclr
+	url = https://github.com/focus-creative-games/leanclr.git
+	branch = coreclr-minimal

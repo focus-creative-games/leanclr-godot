@@ -1,0 +1,11 @@
+/extern/*
+!/extern/leanclr
+/.tools/
+/.cache/
+/build/
+/demo/.godot/
+/demo/addons/leanclr/bin/
+/demo/managed/**/*.bytes
+/demo/managed/**/provenance.json
+/tools/__pycache__/
+/tools/templates-tail.bin
