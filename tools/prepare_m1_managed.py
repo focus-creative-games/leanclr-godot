@@ -1,5 +1,6 @@
 """Build isolated publication assemblies from official GodotSharp and sample sources."""
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -12,6 +13,11 @@ parser.add_argument('--sample', type=Path, default=ROOT / 'samples/dotnet')
 args = parser.parse_args()
 build = ROOT / 'build/m1'
 build.mkdir(parents=True, exist_ok=True)
+(build / 'managed').mkdir(exist_ok=True)
+(build / 'managed/Directory.Build.props').write_text('''<Project><PropertyGroup>
+<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+<Deterministic>true</Deterministic><DebugType>none</DebugType>
+</PropertyGroup></Project>''', encoding='utf-8')
 godot = args.godot_mono / 'Godot_v4.7.2-stable_mono_win64_console.exe'
 generated = build / 'glue/GodotSharp/GodotSharp/Generated'
 if not generated.exists():
@@ -169,3 +175,7 @@ registration.append('} } }')
  <Reference Include="Gameplay"><HintPath>{game.as_posix()}/bin/Release/net10.0/Gameplay.dll</HintPath></Reference></ItemGroup>
 </Project>''', encoding='utf-8')
 subprocess.run(['dotnet', 'build', str(bootstrap / 'Bootstrap.csproj'), '-c', 'Release', '--nologo'], check=True)
+inputs = [p for pattern in ['*.cs', '*.csproj', '*.tscn', '*.tres', 'project.godot'] for p in args.sample.glob(pattern)]
+inputs.append(ROOT / 'managed/DemoLogic/Motion.cs')
+(build / 'managed-inputs.json').write_text(json.dumps({'sample': str(args.sample.resolve()),
+    'sources': {str(p.resolve()): hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs}}, indent=2) + '\n', encoding='utf-8')

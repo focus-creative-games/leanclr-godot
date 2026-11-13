@@ -2,6 +2,7 @@ param(
     [string]$RuntimeSource = (Join-Path $PSScriptRoot '../extern/leanclr'),
     [string]$GodotMono = (Join-Path $PSScriptRoot '../../Godot_v4.7.2-stable_mono_win64'),
     [string]$Sample = (Join-Path $PSScriptRoot '../samples/dotnet'),
+    [switch]$Aot,
     [int]$Jobs = 8
 )
 $ErrorActionPreference = 'Stop'
@@ -20,12 +21,17 @@ function Run([string]$program, [string[]]$arguments, [string]$name) {
 }
 Run 'python' @("$PSScriptRoot/prepare_m1_managed.py", '--godot-mono', $GodotMono, '--sample', $Sample) 'managed-build'
 Run 'dotnet' @('build', "$RuntimeSource/src/leanaot/LeanAOT/LeanAOT.csproj", '-c', 'Release', '--nologo') 'leanaot-build'
-$aot = "$RuntimeSource/out/dotnet/LeanAOT/Release/net8.0/LeanAOT.dll"
-Run 'dotnet' @($aot, '--leanaot-runtime-api-profile', 'coreclr-net10',
+$aotProgram = "$RuntimeSource/out/dotnet/LeanAOT/Release/net8.0/LeanAOT.dll"
+Run 'dotnet' @($aotProgram, '--leanaot-runtime-api-profile', 'coreclr-net10',
     '-d', "$root/build/m1/signature-fixture/bin/Release/net10.0", '-d', 'C:/Program Files/dotnet/shared/Microsoft.NETCore.App/10.0.8',
     '-a', 'GodotSharpEditor', '-o', "$root/build/m1/calli", '--calli-bridges-only') 'calli-generate'
 $inventory = Get-Content "$root/build/m1/calli/calli_bridges.json" -Raw | ConvertFrom-Json
 if ($inventory.bridge_count -le 0 -or @($inventory.sites | Where-Object status -ne 'generated').Count -ne 0) { throw 'Incomplete native calli signature catalog.' }
+$aotDirectory = ''
+if ($Aot) {
+    Run 'python' @("$PSScriptRoot/prepare_m5_aot.py", '--runtime-source', $RuntimeSource) 'prepare-aot'
+    $aotDirectory = "$root/build/m5/aot"
+}
 Run 'python' @("$PSScriptRoot/prepare_m1_backend.py") 'prepare-backend'
 $formatter = "$RuntimeSource/tools/clang-format/clang-format.exe"
 $godot = "$root/extern/godot"
@@ -33,7 +39,7 @@ Run $formatter @('-i', "--style=file:$godot/.clang-format", "$godot/modules/mono
     "$godot/modules/mono/leanclr_backend_callbacks.inc", "$godot/modules/mono/mono_gd/gd_mono.cpp") 'format-backend'
 Run $formatter @('-i', "--style=file:$RuntimeSource/.clang-format", "$root/build/m1/calli/modules.cpp", "$root/build/m1/calli/calli_bridges.cpp",
     "$root/build/m1/calli/calli_bridge_types.h") 'format-bridges'
-Run 'cmake' @('-S', "$root/native/m1", '-B', "$root/build/m1/runtime", '-G', 'Visual Studio 17 2022', '-A', 'x64', "-DLEANCLR_SOURCE_DIR=$RuntimeSource") 'runtime-configure'
+Run 'cmake' @('-S', "$root/native/m1", '-B', "$root/build/m1/runtime", '-G', 'Visual Studio 17 2022', '-A', 'x64', "-DLEANCLR_SOURCE_DIR=$RuntimeSource", "-DLEANCLR_GODOT_AOT_DIR=$aotDirectory") 'runtime-configure'
 Run 'cmake' @('--build', "$root/build/m1/runtime", '--config', 'Release', '--parallel', "$Jobs") 'runtime-build'
 $previousPythonPath = $env:PYTHONPATH
 $previousRuntime = $env:LEANCLR_GODOT_RUNTIME
@@ -53,3 +59,6 @@ try {
 }
 Run 'dotnet' @('build', "$root/tools/managed-info/ManagedInfo.csproj", '-c', 'Release', '--nologo') 'managed-info-build'
 Write-Host 'M1 Windows template and publication assemblies built.'
+
+$mode = if ($Aot) { 'mixed' } else { 'interpreter' }
+Run 'python' @("$PSScriptRoot/write-template-manifest.py", 'win64', '--mode', $mode, '--runtime-source', $RuntimeSource) 'template-manifest'

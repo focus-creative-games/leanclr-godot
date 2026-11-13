@@ -1,5 +1,7 @@
 """Prepare the publication-only Godot backend and typed reverse callbacks."""
 from pathlib import Path
+import hashlib
+import json
 import re
 import shutil
 
@@ -88,7 +90,17 @@ extern "C" const void* leanclr_godot_m1_modules() {
 #endif
 }
 #ifndef LEANCLR_GODOT_GAMEPLAY_AOT
-extern "C" void leanclr_godot_aot_report() {}
+extern "C" bool leanclr_godot_aot_counters(uint64_t*, uint64_t*) { return false; }
 #endif
 ''', encoding='utf-8')
+lock = json.loads((ROOT / 'dependencies.json').read_text(encoding='utf-8'))
+contract = [lock['godot']['commit'], lock['leanclr']['commit'],
+    hashlib.sha256((ROOT / 'build/m1/managed/GodotSharp/bin/Release/net10.0/GodotSharp.dll').read_bytes()).hexdigest(),
+    lock['corelib']['native_sha256'], lock['corelib']['wasm_sha256'],
+    hashlib.sha256((ROOT / 'build/m1/calli/calli_bridges.json').read_bytes()).hexdigest()]
+with registry.open('a', encoding='utf-8') as output:
+    output.write('extern "C" const char* leanclr_godot_contract(unsigned index) {\n static const char* values[] = {' +
+                 ','.join(json.dumps(value) for value in contract) + '};\n return index < 6 ? values[index] : "";\n}\n')
+    logic_hash = hashlib.sha256((ROOT / 'build/m1/managed/DemoLogic/bin/Release/net10.0/DemoLogic.dll').read_bytes()).hexdigest()
+    output.write('extern "C" const char* leanclr_godot_aot_assembly_sha256() {\n#ifdef LEANCLR_GODOT_GAMEPLAY_AOT\n return "' + logic_hash + '";\n#else\n return "";\n#endif\n}\n')
 print('Prepared M1 backend and', len(fields), 'typed reverse callbacks')

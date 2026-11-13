@@ -1,6 +1,7 @@
 param(
     [string]$RuntimeSource = (Join-Path $PSScriptRoot '../extern/leanclr'),
     [string]$Emsdk = (Join-Path $PSScriptRoot '../.tools/emsdk'),
+    [switch]$Aot,
     [int]$Jobs = 8
 )
 $ErrorActionPreference = 'Stop'
@@ -16,6 +17,11 @@ function Run([string]$program, [string[]]$arguments, [string]$name) {
 }
 $env:EMSDK_QUIET = '1'
 & "$Emsdk/emsdk_env.ps1"
+$aotDirectory = ''
+if ($Aot) {
+    Run 'python' @("$PSScriptRoot/prepare_m5_aot.py", '--runtime-source', $RuntimeSource) 'prepare-aot'
+    $aotDirectory = "$root/build/m5/aot"
+}
 Run 'python' @("$PSScriptRoot/prepare_m1_backend.py") 'prepare-backend'
 Run 'python' @("$PSScriptRoot/prepare_portable_backend.py") 'prepare-portable'
 $formatter = "$RuntimeSource/tools/clang-format/clang-format.exe"
@@ -23,7 +29,7 @@ $godot = "$root/extern/godot"
 Run $formatter @('-i', "--style=file:$godot/.clang-format", "$godot/modules/mono/leanclr_backend.cpp", "$godot/modules/mono/leanclr_backend.h",
     "$godot/modules/mono/leanclr_backend_callbacks.inc", "$godot/modules/mono/mono_gd/gd_mono.cpp") 'format-backend'
 Run $formatter @('-i', "--style=file:$RuntimeSource/.clang-format", "$root/build/m1/calli/modules.cpp") 'format-registry'
-Run 'emcmake.bat' @('cmake', '-S', "$root/native/m1", '-B', "$logs/runtime", '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release', "-DLEANCLR_SOURCE_DIR=$RuntimeSource") 'configure-runtime'
+Run 'emcmake.bat' @('cmake', '-S', "$root/native/m1", '-B', "$logs/runtime", '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release', "-DLEANCLR_SOURCE_DIR=$RuntimeSource", "-DLEANCLR_GODOT_AOT_DIR=$aotDirectory") 'configure-runtime'
 Run 'cmake' @('--build', "$logs/runtime", '--parallel', "$Jobs") 'build-runtime'
 $env:PYTHONPATH = "$root/.tools/scons"
 $env:LEANCLR_GODOT_RUNTIME = "$logs/runtime"
@@ -34,3 +40,6 @@ Run 'python' @('-m', 'SCons', '-C', $godot, 'platform=web', 'target=template_rel
     'threads=no', 'dlink_enabled=no', 'initial_memory=128', 'debug_symbols=no', 'optimize=none', 'use_lto=no',
     'extra_suffix=leanclr_m3', "-j$Jobs") 'build-template'
 Write-Host 'Web LeanCLR publication template built.'
+
+$mode = if ($Aot) { 'mixed' } else { 'interpreter' }
+Run 'python' @("$PSScriptRoot/write-template-manifest.py", 'html5', '--mode', $mode, '--runtime-source', $RuntimeSource) 'template-manifest'

@@ -3,6 +3,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -19,6 +20,12 @@ parser.add_argument('--runtime-source', type=Path, default=ROOT / 'extern/leancl
 args = parser.parse_args()
 sample = args.sample.resolve()
 build = ROOT / 'build/m1'
+compiled = json.loads((build / 'managed-inputs.json').read_text(encoding='utf-8'))
+current_inputs = [p for pattern in ['*.cs', '*.csproj', '*.tscn', '*.tres', 'project.godot'] for p in sample.glob(pattern)]
+current_inputs.append(ROOT / 'managed/DemoLogic/Motion.cs')
+current_sources = {str(p.resolve()): hashlib.sha256(p.read_bytes()).hexdigest() for p in current_inputs}
+if compiled['sample'] != str(sample) or compiled['sources'] != current_sources:
+    raise RuntimeError('Managed publication sources changed or belong to another project. Run prepare_m1_managed.py --sample for this project first.')
 stage = build / ('export-project-' + sample.name)
 payload = build / ('payload-' + sample.name)
 web = args.target == 'web'
@@ -42,6 +49,10 @@ for pattern in ('*.cs', '*.uid', '*.tscn', '*.tres', '*.csproj', '*.sln'):
         if not (sample / old.name).is_file():
             old.unlink()
 shutil.copytree(sample / '.godot/mono', stage / '.godot/mono', dirs_exist_ok=True)
+project = stage / 'project.godot'
+text = project.read_text(encoding='utf-8')
+text = re.sub(r'(?ms)^\[editor_plugins\].*?(?=^\[|\Z)', '', text)
+project.write_text(text, encoding='utf-8')
 if android:
     project = stage / 'project.godot'
     text = project.read_text(encoding='utf-8')
@@ -64,7 +75,7 @@ for item in closure:
     name = item['name'] + '.dll.bytes'
     shutil.copyfile(item['path'], payload / name)
     manifest['files'].append({'path': 'res://.leanclr/' + name, 'source': name, 'sha256': item['sha256']})
-for name, path in [('LeanCLR-LICENSE.txt', ROOT / 'extern/leanclr/LICENSE'), ('Godot-LICENSE.txt', ROOT / 'extern/godot/LICENSE.txt'),
+for name, path in [('LeanCLR-LICENSE.txt', ROOT / 'extern/leanclr/LICENSE'), ('Godot-LICENSE.txt', ROOT / 'extern/godot/LICENSE.txt'), ('Godot-COPYRIGHT.txt', ROOT / 'extern/godot/COPYRIGHT.txt'),
                    ('DotNET-LICENSE.txt', Path('C:/Program Files/dotnet/LICENSE.txt')),
                    ('DotNET-ThirdPartyNotices.txt', Path('C:/Program Files/dotnet/ThirdPartyNotices.txt'))]:
     data = path.read_bytes()

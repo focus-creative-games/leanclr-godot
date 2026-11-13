@@ -1,5 +1,6 @@
 param(
     [string]$RuntimeSource = (Join-Path $PSScriptRoot '../extern/leanclr'),
+    [switch]$Aot,
     [int]$Jobs = 8
 )
 $ErrorActionPreference = 'Stop'
@@ -18,6 +19,11 @@ function Run([string]$program, [string[]]$arguments, [string]$name) {
 if (-not (Test-Path "$ndk/build/cmake/android.toolchain.cmake")) { throw 'Run python tools/prepare_android.py first.' }
 Run 'python' @("$PSScriptRoot/prepare_android_runtime.py", '--source', $RuntimeSource) 'prepare-runtime'
 $patchedSource = "$logs/leanclr-source"
+$aotDirectory = ''
+if ($Aot) {
+    Run 'python' @("$PSScriptRoot/prepare_m5_aot.py", '--runtime-source', $RuntimeSource) 'prepare-aot'
+    $aotDirectory = "$root/build/m5/aot"
+}
 Run 'python' @("$PSScriptRoot/prepare_m1_backend.py") 'prepare-backend'
 Run 'python' @("$PSScriptRoot/prepare_portable_backend.py") 'prepare-portable'
 $formatter = "$RuntimeSource/tools/clang-format/clang-format.exe"
@@ -29,7 +35,7 @@ Run $formatter @('-i', "--style=file:$godot/.clang-format", "$godot/modules/mono
 Run $formatter @('-i', "--style=file:$RuntimeSource/.clang-format", "$root/build/m1/calli/modules.cpp") 'format-registry'
 Run 'cmake' @('-S', "$root/native/m1", '-B', "$logs/runtime-x86_64", '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=Release',
     "-DCMAKE_TOOLCHAIN_FILE=$ndk/build/cmake/android.toolchain.cmake", '-DANDROID_ABI=x86_64', '-DANDROID_PLATFORM=android-24',
-    '-DANDROID_STL=c++_shared', "-DLEANCLR_SOURCE_DIR=$patchedSource") 'configure-runtime'
+    '-DANDROID_STL=c++_shared', "-DLEANCLR_SOURCE_DIR=$patchedSource", "-DLEANCLR_GODOT_AOT_DIR=$aotDirectory") 'configure-runtime'
 Run 'cmake' @('--build', "$logs/runtime-x86_64", '--parallel', "$Jobs") 'build-runtime'
 $env:ANDROID_HOME = $sdk
 $env:ANDROID_SDK_ROOT = $sdk
@@ -41,3 +47,8 @@ Run 'python' @('-m', 'SCons', '-C', $godot, 'platform=android', 'target=template
     'module_svg_enabled=yes', 'module_text_server_fb_enabled=yes', 'module_godot_physics_2d_enabled=yes',
     'vulkan=no', 'opengl3=yes', 'debug_symbols=no', 'optimize=none', 'use_lto=no', 'extra_suffix=leanclr_m4', "-j$Jobs") 'build-template'
 Write-Host 'Android x86_64 LeanCLR shared library built.'
+
+Run 'python' @("$PSScriptRoot/prepare_android_template.py") 'package-template'
+
+$mode = if ($Aot) { 'mixed' } else { 'interpreter' }
+Run 'python' @("$PSScriptRoot/write-template-manifest.py", 'android', '--mode', $mode, '--runtime-source', $RuntimeSource) 'template-manifest'

@@ -21,14 +21,18 @@ body = output / 'DemoLogic.method_body_part1.cpp'
 text = body.read_text(encoding='utf-8')
 # Counters are diagnostics at entry only, outside the benchmark loop. The single
 # runtime owner thread is enforced by the host, so these require no atomics.
-text = '#include <cstdio>\nstatic unsigned long long step_calls = 0, benchmark_calls = 0;\n' + text
+text = '#include <cstdint>\nextern "C" void leanclr_godot_aot_marker(uint64_t, uint64_t);\nstatic uint64_t step_calls = 0, benchmark_calls = 0;\n' + text
 for method, counter in [('Step', 'step_calls'), ('Benchmark', 'benchmark_calls')]:
     pattern = r'(leanclr::RtResult<[^\n]+_Motion_' + method + r'_[^\n]+\n\{)'
     text, count = re.subn(pattern, r'\1\n ++' + counter + ';', text)
     assert count == 1, method
+    if method == 'Step':
+        text = text.replace('++step_calls;', '++step_calls;\n if (step_calls == 4) leanclr_godot_aot_marker(step_calls, benchmark_calls);')
 text += '''
-extern "C" void leanclr_godot_aot_report() {
- std::fprintf(stderr, "LEANCLR_AOT_EXECUTED module=DemoLogic step=%llu benchmark=%llu\\n", step_calls, benchmark_calls);
+extern "C" bool leanclr_godot_aot_counters(uint64_t* steps, uint64_t* benchmarks) {
+ *steps = step_calls;
+ *benchmarks = benchmark_calls;
+ return true;
 }
 '''
 body.write_text(text, encoding='utf-8')
