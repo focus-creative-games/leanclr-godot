@@ -13,7 +13,7 @@ namespace GodotTools.Export
         private static string[] GetLeanClrExportFeatures()
         {
             using JsonDocument document = JsonDocument.Parse(File.ReadAllBytes(Path.Combine(LeanClrM0Stage!, "manifest.json")));
-            return new[] { document.RootElement.GetProperty("phase").GetString() == "M1-windows-demo" ? "leanclr" : "leanclr_m0" };
+            return new[] { document.RootElement.GetProperty("runtime_ready").GetBoolean() ? "leanclr" : "leanclr_m0" };
         }
 
         private bool ExportLeanClrM0()
@@ -27,13 +27,16 @@ namespace GodotTools.Export
             JsonElement manifest = document.RootElement;
             string phase = manifest.GetProperty("phase").GetString()!;
             bool runtimeReady = manifest.GetProperty("runtime_ready").GetBoolean();
-            bool validPhase = phase == "M0-export-prototype" && !runtimeReady || phase == "M1-windows-demo" && runtimeReady;
+            bool validPhase = phase == "M0-export-prototype" && !runtimeReady ||
+                (phase == "M1-windows-demo" || phase == "M3-html5-demo") && runtimeReady;
             if (!validPhase ||
                 manifest.GetProperty("godot_commit").GetString() != "ed1daf0bf001b61586d9930840f2f1394092c079")
                 throw new InvalidDataException("Invalid LeanCLR export manifest phase or Godot version.");
             string target = manifest.GetProperty("target").GetString()!;
             if (phase == "M1-windows-demo" && target != "native")
                 throw new InvalidDataException("M1 runtime publication is Windows-only.");
+            if (phase == "M3-html5-demo" && target != "wasm")
+                throw new InvalidDataException("M3 runtime publication requires a Wasm payload.");
             string expectedOs = target == "native" ? "Windows" : target == "wasm" ? "Web" : "invalid";
             if (!string.Equals(GetExportPlatform().GetOsName(), expectedOs, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidDataException("M0 payload does not match the export platform.");
@@ -56,6 +59,7 @@ namespace GodotTools.Export
             AddFile("res://.leanclr/manifest.json", manifestBytes, remap: false);
             Console.WriteLine("M0_EXPORT_PAYLOAD_OK target=" + target);
             if (runtimeReady) Console.WriteLine("M1_EXPORT_PAYLOAD_OK target=" + target);
+            if (runtimeReady) Console.WriteLine("LEANCLR_EXPORT_PAYLOAD_OK target=" + target);
             return true;
         }
     }

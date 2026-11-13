@@ -14,6 +14,8 @@
 
 [M2 语义契约](docs/m2-validation.md) 已通过 Windows x64 对比验收，覆盖同步信号、资源、集合、实例化和生命周期，三次独立进程均无退出资源泄漏。
 
+[M3 HTML5](docs/m3-validation.md) 已通过 Chrome/WebGL2 验收，包含 Node2D 真实键盘移动、15 项语义契约与页面刷新重建运行时。
+
 ## 依赖
 
 - Godot 4.7.2 标准版，本机默认路径为相邻目录 `v4.7.2-stable_win64`。

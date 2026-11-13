@@ -62,9 +62,13 @@ leanclr_runtime = os.environ.get("LEANCLR_GODOT_RUNTIME")
 if leanclr_runtime and not env.editor_build:
     env_mono.Append(CPPDEFINES=["LEANCLR_GODOT", "LEANCLR_STATIC"])
     env_mono.Append(CPPPATH=[os.path.join(os.environ["LEANCLR_GODOT_SOURCE"], "src/runtime/public")])
-    env.Append(LIBS=[env.File(os.path.join(leanclr_runtime, "Release/leanclr-godot-calli.lib")),
-                    env.File(os.path.join(leanclr_runtime, "runtime/Release/leanclr.lib"))])
-    env.Append(LINKFLAGS=["bcrypt.lib"])
+    if env["platform"] == "windows":
+        env.Append(LIBS=[env.File(os.path.join(leanclr_runtime, "Release/leanclr-godot-calli.lib")),
+                        env.File(os.path.join(leanclr_runtime, "runtime/Release/leanclr.lib"))])
+        env.Append(LINKFLAGS=["bcrypt.lib"])
+    else:
+        env.Append(LIBS=[env.File(os.path.join(leanclr_runtime, "libleanclr-godot-calli.a")),
+                        env.File(os.path.join(leanclr_runtime, "runtime/libleanclr.a"))])
 '''
     scsub.write_text(text, encoding='utf-8', newline='\n')
 registry = ROOT / 'build/m1/calli/modules.cpp'
