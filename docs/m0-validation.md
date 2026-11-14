@@ -114,17 +114,8 @@ M0_EXPORT_ALL_OK development sources and installed editor unchanged
 
 早期 `tools/m0-pack.py` 仍保留为 PCK 容器探针；M0 的导出验收已使用真正的平台导出流程，不再以单独的 PCKPacker 实验代替。
 
-## 原有极简集成回归
-
-新版本运行时下，Windows/Web GDExtension 均已重建、导出。Windows 源工程运行和导出 EXE 均通过：
-
-```text
-LEANCLR_SMOKE_OK ticks=121 x=942 entities=3 remaining=58000
-LEANCLR_STOPPED files=2/2
-```
-
-本轮 Wasm ABI 在 Node 实际运行；更新后的极简 Web 游戏尚未重新进行浏览器玩法测试。此前浏览器验证记录仍对应先前版本，不扩展为新版本结论。
-
 ## M1 交接
 
 下一阶段实现发布用 GodotSharp 适配、LeanCLR 脚本 backend 和 Windows 模板，让同一个真实 C# Node2D 在官方编辑器开发、在 LeanCLR 发布进程运行。M0 已证明公共调用和导出接管可行，不代表完整 Godot C# API 已兼容。
+
+公共 ABI 回归现使用独立的 `tests/m0/CMakeLists.txt`，native/Web 构建目录分别为 `build/m0/probe-native` 与 `build/m0/probe-web`，不再依赖原 GDExtension 工程。

@@ -6,7 +6,7 @@
 
 开发者继续使用官方 Godot .NET 编辑器、官方 GodotSharp 和标准 dotnet 工具链编写、运行及调试 C#。LeanCLR 仅用于发布后的游戏进程。业务代码、场景和资源保持同一份，发布时重新构建目标平台的 Release 程序集。
 
-正式发布后端复用 Godot `modules/mono` 的 C# 脚本体系，并提供适配版 GodotSharp、LeanCLR 原生宿主和定制发布模板。现有 GDExtension 极简 demo 保留为底层回归样例；其“整数输入加批量快照”协议不扩展为正式 Godot C# API。
+正式发布后端复用 Godot `modules/mono` 的 C# 脚本体系，并提供适配版 GodotSharp、LeanCLR 原生宿主和定制发布模板。主线只保留这一脚本集成路线；原 GDExtension 实现已移到独立分支，公共 ABI 测试使用独立的运行时测试工程。
 
 第一阶段承诺经过验收的源码兼容，不承诺原版 GodotSharp DLL 的二进制兼容。GodotSharp 的公开 API 应尽量复用官方定义；用户不需要在游戏逻辑中编写 `#if LEANCLR`。超出当前发布能力的 API 必须在发布检查中明确报错，不能静默改变行为。
 
@@ -42,28 +42,17 @@ flowchart TB
 
 开发与发布输出必须隔离。发布使用的 GodotSharp 不写入开发项目的普通输出目录，也不覆盖官方 SDK 的缓存或安装文件。第一次发布验证以独立的 Release 工程目录进行，防止后端切换污染编辑器。
 
-## 当前基线与能力差距
+## 当前基线与验证范围
 
-已固定的基线为 Godot 4.7.2、LeanCLR `7d9a431eb1313f9f61bc1b3b1bdfcdc5ea95ce48` 和 .NET 10.0.8 BCL。LeanCLR 已由 `extern/leanclr` submodule 管理；构建继续允许指定其他源码目录。Godot 源码也应使用独立、固定提交的依赖，业务适配补丁由本仓库保存，不能直接修改用户的 Godot 安装。
+Godot、LeanCLR、CoreLib 与工具链的精确版本以 `dependencies.json` 为准。LeanCLR 由 `extern/leanclr` submodule 管理，构建继续允许指定其他源码目录；Godot 源码位于独立的固定版本副本，适配补丁由本仓库保存，不修改用户安装的官方编辑器。
 
-2026 年 11 月 13 日补充核对：最新本地 `coreclr-minimal`（`b5c25e33`）已支持 managed/unmanaged calli，并记录了 Windows x64、Wasm32 的静态签名桥与结构体 ABI 验收。后续适配应优先复用这套能力，而不是默认把全部 NativeFuncs 改成具名 P/Invoke。当前 demo 的 submodule 仍固定在上面的旧提交，本方案更新不自动升级该依赖。通用 reverse P/Invoke、UnmanagedCallersOnly 和嵌套函数指针 ABI 不在这轮 calli 验收范围，Godot 的具体签名仍需逐项验证。
+当前发布链已经复用 GodotSharp 的函数表和 managed/unmanaged calli，使用生成的原生桩处理反向调用，并验证 owner 线程上的同步嵌套、GC 与异常恢复。具体的对象、信号、资源、集合、脚本挂载、三平台导出与混合 AOT 验证见阶段验收记录。这些结果仍不等同于完整 Godot / BCL 或任意 native ABI 的支持。
 
-现有 demo 已验证 Windows 和 Chromium WebGL2 下的程序集加载、固定缓冲区玩法、帧调用与终态退出。这些证据不包含 GodotSharp、脚本挂载、对象封送或同步回调。
-
-| 现有能力 | 正式发布所需补充 |
-| --- | --- |
-| `Initialize / Tick / Shutdown` 公共宿主 | 可注册桥接、缓存入口及调用脚本桥的方法级宿主接口 |
-| 单线程 owner 检查与生命周期防重入 | owner 线程上的合法同步回调嵌套与异常隔离 |
-| 固定原生缓冲区交换 | 对象句柄、Variant、字符串、集合与结构体封送 |
-| 自定义游戏入口 | 官方 C# 脚本类型注册、场景脚本映射、实例与通知 |
-| GDExtension 导出 | 带 C# 脚本支持的定制 Godot 模板与独立发布流程 |
-| 受控 minimal BCL | GodotSharp 实际依赖清单与对应运行时回归 |
-
-现有 `engine_host` v1 保持兼容，继续服务极简样例。不要通过增加几个业务函数名，把它变成依赖 Godot 的运行时私有接口。
+`engine_host` v1 用于 bootstrap 和独立公共 ABI 回归；Godot 特有的脚本与互操作适配保存在宿主仓库，不把依赖 Godot 的业务函数固化为 LeanCLR 运行时私有接口。
 
 ## 编辑器开发体验
 
-开发项目继续引用官方 Godot.NET.Sdk 和官方 GodotSharp，使用正常的 C# 脚本挂载、Inspector、信号、源码生成与调试流程。首个兼容基线项目固定为经过官方编辑器验证的 `net10.0` 配置，其他目标框架后续独立验收。
+开发项目继续引用官方 Godot.NET.Sdk 和官方 GodotSharp，使用正常的 C# 脚本挂载、Inspector、信号、源码生成与调试流程。当前样例开发工程为 `net8.0`；发布工具在私有目录构建 `net10.0` 程序集，用户不需要为发布改写开发工程的目标框架。
 
 停止后再次 Play、编译刷新和编辑器内的工具脚本重载由官方后端负责，不增加 LeanCLR 编辑器 VM。Godot 4.7.2 的标准 Play 使用游戏实例进程，嵌入游戏窗口也不能直接等同于进程内执行。[运行实现](https://raw.githubusercontent.com/godotengine/godot/4.7.2-stable/editor/run/editor_run.cpp)
 
@@ -258,7 +247,7 @@ M0 首先验证是否只需在工具私有目录部署适配版 GodotTools 即�
 | Android x64（本轮）／ARM64（后续） | 本轮以 MuMu APK 验证资源加载、后台恢复与进程重建；ARM64、AAB 和商店签名单独验收 |
 | iOS ARM64 | 模板链接／嵌入方式、签名、设备执行与系统生命周期 |
 
-正式 Web 模板将脚本系统和 LeanCLR 一同编译进 Godot，不再依赖当前 demo 的 GDExtension 侧模块作为唯一运行时入口。需要统一 Emscripten、内存增长、异常模型和线程配置；不能把不同工具链的主模块直接拼装。
+正式 Web 模板将脚本系统和 LeanCLR 一同编译进 Godot，不使用 GDExtension 侧模块作为运行时入口。需要统一 Emscripten、内存增长、异常模型和线程配置；不能把不同工具链的主模块直接拼装。
 
 CoreLib 不仅要匹配位宽，还要处于已验证的版本和平台能力范围。当前 x86 CoreLib 用于 Wasm 的做法只代表已有 minimal 范围，不能推导出全部桌面 OS API 在浏览器可用。
 
@@ -272,7 +261,7 @@ CoreLib 不仅要匹配位宽，还要处于已验证的版本和平台能力范
 
 分别统计托管堆、元数据、解释器准备结果、原生对象、包装与 GC handles、事件连接、程序集与封送缓冲区。准确式全量 GC 的暂停用真实对象图测量，显式释放 Godot 资源，避免依赖 finalizer 的时机和线程。
 
-以同一游戏场景比较官方发布后端和 LeanCLR 后端，采集启动、帧时间分位数、最长 GC 暂停、每帧分配、边界调用数量与峰值内存。预算在 M1 原型基线后确定，不使用极简 demo 的成功作为完整绑定的性能结论。
+以同一游戏场景比较官方发布后端和 LeanCLR 后端，采集启动、帧时间分位数、最长 GC 暂停、每帧分配、边界调用数量与峰值内存。预算在 M1 原型基线后确定，仅对实际执行的场景和 API 配置给出性能结论。
 
 ## 实施阶段与退出条件
 

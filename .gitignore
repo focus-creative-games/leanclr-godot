@@ -3,10 +3,6 @@
 /.tools/
 /.cache/
 /build/
-/demo/.godot/
-/demo/addons/leanclr/bin/
-/demo/managed/**/*.bytes
-/demo/managed/**/provenance.json
 /tools/__pycache__/
 /tools/managed-info/bin/
 /tools/managed-info/obj/

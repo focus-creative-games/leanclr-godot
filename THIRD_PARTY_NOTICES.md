@@ -1,8 +1,8 @@
 # Third party notices
 
-This project uses the upstream LeanCLR `coreclr-minimal` runtime and godot-cpp under their MIT licenses. Source revisions and archive hashes are recorded in `dependencies.json`. Dependency sources retain their original LICENSE files. The LeanCLR runtime is linked without the old fork's CoreLib layout patches.
+This project uses the upstream LeanCLR `coreclr-minimal` runtime and Godot Engine under their MIT licenses. Source revisions and archive hashes are recorded in `dependencies.json`. Dependency sources retain their original LICENSE files. The LeanCLR runtime is linked without the old fork's CoreLib layout patches.
 
-The sample gameplay in `managed/Entry.cs` is adapted from [shimaoye/leanclr-godot](https://github.com/shimaoye/leanclr-godot), under its MIT license:
+The Emscripten preparation tool in `tools/prepare_emsdk.py` is adapted from [shimaoye/leanclr-godot](https://github.com/shimaoye/leanclr-godot), under its MIT license:
 
 Copyright (c) 2026 Code Philosophy(代码哲学)
 
@@ -24,6 +24,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-The Emscripten preparation script is adapted from that project's pinned toolchain preparation script. Emscripten and LLVM retain their own license files in the downloaded SDK.
+Emscripten and LLVM retain their own license files in the downloaded SDK.
 
-.NET 10.0.8 managed libraries are distributed with the original `LICENSE.txt` and `ThirdPartyNotices.txt`, staged under `demo/managed/notices` and copied into exported packages. Godot Engine's license and third-party notices are available from its distribution and [official license page](https://godotengine.org/license/).
+.NET 10.0.8 managed libraries are distributed with the original `LICENSE.txt` and `ThirdPartyNotices.txt`, included in publication payloads, exported packages and template bundles. Godot Engine's license and third-party notices are available from its distribution and [official license page](https://godotengine.org/license/).

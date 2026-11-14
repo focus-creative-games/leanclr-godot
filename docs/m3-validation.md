@@ -2,7 +2,7 @@
 
 日期：2026-11-14。状态：已完成。
 
-HTML5 使用同一套 Godot CSharpScript 后端和适配 GodotSharp，LeanCLR 直接链接进 Godot 主 Wasm；不依赖旧 demo 的 GDExtension 侧模块。工具链固定 Emscripten 4.0.20，wasm32、单线程、目标位宽 CoreLib。
+HTML5 使用同一套 Godot CSharpScript 后端和适配 GodotSharp，LeanCLR 直接链接进 Godot 主 Wasm；不使用 GDExtension 侧模块。工具链固定 Emscripten 4.0.20，wasm32、单线程、目标位宽 CoreLib。
 
 ## 构建与运行
 

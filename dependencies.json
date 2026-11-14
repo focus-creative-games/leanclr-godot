@@ -5,11 +5,6 @@
     "commit": "ed1daf0bf001b61586d9930840f2f1394092c079",
     "archive_sha256": "e607e9985e1c201bc9cdc1aec8a120f0c3f53b9603f1f828e2b748534a2471ef"
   },
-  "godot-cpp": {
-    "repository": "https://github.com/godotengine/godot-cpp.git",
-    "commit": "507ed9d840c01a3c5b2a39af8bb4000bfac30bf5",
-    "archive_sha256": "30da4ac295997061a6af81ae531510efd4e6a86e506eb4466edc0898ef3fe048"
-  },
   "leanclr": {
     "repository": "https://github.com/focus-creative-games/leanclr.git",
     "path": "extern/leanclr",

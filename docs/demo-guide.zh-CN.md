@@ -21,7 +21,7 @@ Set-Location $repo
 | `samples/semantics/project.godot` | 对象、信号、资源、集合等 15 项契约 | 输出 `M2_SEMANTICS_OK` 后自动退出 |
 | `samples/extended/project.godot` | 扩展 API 与大堆 GC 的 11 项契约 | 输出 `M5_EXTENDED_OK` 后自动退出；会申请 160 MiB 测试数据 |
 
-第一次体验请打开 `samples/dotnet`，不是仓库根目录，也不是原先 GDExtension 路线的 `demo` 工程。
+第一次体验请打开 `samples/dotnet`，不是仓库根目录。
 
 ## 2. 先试玩现成的 LeanCLR 发布包
 
