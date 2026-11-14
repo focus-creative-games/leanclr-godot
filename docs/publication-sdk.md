@@ -30,7 +30,7 @@ Every publication rebuilds isolated managed assemblies, verifies the template ha
 - `publication.json`: exact dependencies, target template contract, source and assembly hashes.
 - `compatibility.json`: complete closure member/import census, known unsupported application dependencies and profile status.
 - `artifacts.json`: pointer/real widths, interpreter or mixed mode, artifact sizes and SHA-256 hashes.
-- `template.json`: template, GodotSharp and calli catalog fingerprints; mixed-mode method/IL retention details; Android source patch hashes.
+- `template.json`: template, GodotSharp and calli catalog fingerprints; mixed-mode method/IL retention details; `runtime_patches` is empty for the current unmodified upstream Android build.
 
 Only exact, executed fixture source profiles in `sdk/validated-profiles.json` receive `validated-fixture` status. Unknown sources require explicit `--experimental`, remain `experimental-pending`, and still cannot publish known unsupported dependencies. The census does not prove reflection-string targets, indirect delegates, asynchronous behavior or all BCL implementations. The official generated `NativeLibrary.SetDllImportResolver` registration is allowed; actual native loading/export operations and user P/Invokes are blocked. HTML5 `Stopwatch` initialization is blocked; use `Godot.Time.GetTicksUsec`.
 

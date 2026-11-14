@@ -35,6 +35,6 @@ report = {'schema': 1, 'target': args.target, 'abi': 'wasm32' if args.target == 
 if args.mode == 'mixed':
     report['aot'] = json.loads((ROOT / 'build/m5/aot-manifest.json').read_text(encoding='utf-8'))
 if args.target == 'android':
-    report['runtime_patches'] = json.loads((ROOT / 'build/android/leanclr-source/patches.json').read_text(encoding='utf-8'))
+    report['runtime_patches'] = {}
 (destination / 'template.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
 print('SDK_TEMPLATE_READY', destination)

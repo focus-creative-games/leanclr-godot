@@ -27,13 +27,16 @@ For lifecycle testing publish the Node2D APK without `--smoke`, then use `tools/
 
 ## Portability changes
 
-The pinned official submodule remains clean. `tools/prepare_android_runtime.py` makes a build-only source copy and emits `runtime_patches/android-posix.patch`:
+The Android runtime portability fixes are now upstream in LeanCLR `7d98994f7954ed637d7a47e9c851170239643353`, including the bundled zlib configuration fix from `952b625`. The build consumes the clean submodule directly; the temporary source-copy tool, local Android patch and host-level `HAVE_UNISTD_H` definition have been removed. Fresh verification is recorded in [the upstream update validation](upstream-android-validation.md).
 
-1. Android API 24 uses `futimens` instead of unavailable `futimes`.
-2. Bionic's GNU `strerror_r` returns `char*`.
-3. Native calli's platform admission includes Android x64, whose generated C++ bridges use the platform C ABI. Other Android architectures stay rejected. This admission was necessary: the original code explicitly allowed only Win64 and Wasm.
+The fixes cover:
 
-The host's zlib target defines `HAVE_UNISTD_H`. These changes contain no managed object-layout substitutions. They should be proposed upstream independently before broad Android architecture support.
+1. Android API 24 uses `futimens`; `futimes` is available only from API 26.
+2. Bionic's GNU `strerror_r` returns `char*` for API 23 and later, while lower API levels keep the other declaration.
+3. Native calli admits Android x64. This does not establish ARM64 support.
+4. LeanCLR's own CMake detects `unistd.h`, defines `HAVE_UNISTD_H` for the bundled zlib C sources, and treats implicit function declarations as errors on supported compilers.
+
+These are runtime portability fixes, not Godot object-layout substitutions. Godot-specific backend and export-policy adaptations still remain in this repository.
 
 The private exporter bypasses the official Mono `.NET 9` template restriction only for an explicit staged LeanCLR payload. It retains Android SDK, Java, texture-import, package and signature checks. Test APKs use a newly generated local Android debug key; production signing and AAB/store publication are outside this acceptance.
 

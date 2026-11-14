@@ -12,7 +12,7 @@
 - 模板、程序集、源文件及发布产物均有 SHA-256 清单；宿主在创建脚本前拒绝不兼容组合，每个加载的 DLL 都验证内容哈希。
 - 提供经过解包哈希复核的三平台模板 ZIP，以及使用已准备 Windows runner 的手动 CI 工作流。CI 命令链在本机执行通过，未向远程 runner 提交运行。
 
-Android 的 15 项语义、嵌套调用 / GC / 异常、前后台恢复、进程重建和实际绘制见 [Android 记录](m4-android-validation.md)。官方 LeanCLR submodule 保持干净；三个 Android 编译 / 平台准入修复仅存在于构建副本及可审阅补丁中。
+Android 的 15 项语义、嵌套调用 / GC / 异常、前后台恢复、进程重建和实际绘制见 [Android 记录](m4-android-validation.md)。官方 LeanCLR submodule 保持干净。初次验收使用的 Android 临时修复现已由上游 `7d98994` 接收，本地补丁、源码副本构建流程和 zlib 宏覆盖已移除；更新后的验证见 [上游修复记录](upstream-android-validation.md)。
 
 ## M5 混合 AOT 与正确性
 
@@ -25,6 +25,8 @@ Windows 额外比较了 200,000 次整数循环及 100 次非精确浮点累积�
 记录：`build/m5/performance/report.json`、`build/m5/web-final/`、`build/m5/android-final/`。Win64 发布进程再次检查未加载 CoreCLR、hostfxr、hostpolicy 或 CLR DLL。
 
 ## 性能预算
+
+本节数值为原始 M5 基线的测量记录；后续 runtime 更新的功能回归结果单独记录，不将旧测量冒充新版本性能数据。
 
 本机各后端 7 个新进程计算样本，另有 3 次、每次 232 个预热后的 C# 帧工作样本。下表帧 P95、GC 和工作集列取三次中的最大值。
 

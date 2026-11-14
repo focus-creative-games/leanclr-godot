@@ -61,6 +61,8 @@ python tools/publish.py --target android --sample samples/dotnet --aot --output 
 
 三平台 SDK 测试入口为 `tools/validate-sdk.ps1`。生成文件与日志保存在 `build/`，不提交二进制；第三方许可见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
+LeanCLR 已更新到上游 `7d98994`，Android POSIX、calli 平台准入及 zlib 修复均已移除本地绕过并重新验证，详见 [上游 Android 修复验证](docs/upstream-android-validation.md)。
+
 ## GDExtension 实现归档
 
 GDExtension 集成已从主线移除，单独保存在本地分支 `codex/gdextension-integration`，起点是最早包含该实现的提交 `84f5d91`（`Add minimal LeanCLR integration for Godot desktop and Web`）。该分支包含独立实现、样例、数据协议、构建脚本和当时的说明；不再与当前主线的发布方案混用。

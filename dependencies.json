@@ -9,7 +9,7 @@
     "repository": "https://github.com/focus-creative-games/leanclr.git",
     "path": "extern/leanclr",
     "branch": "coreclr-minimal",
-    "commit": "b19308a21dae8c58d3ec4fb7e850e24a565d47f1",
+    "commit": "7d98994f7954ed637d7a47e9c851170239643353",
     "profile": "CORECLR_NET10"
   },
   "corelib": {
