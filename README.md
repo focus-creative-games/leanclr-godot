@@ -2,7 +2,7 @@
 
 使用官方 Godot 4.7.2 .NET 编辑器开发和调试 C#，发布后由 upstream LeanCLR `coreclr-minimal` 执行同一份玩法源码。Win64、HTML5 和 Android x64（MuMu）已完成 M0–M5 的本轮验收。
 
-统一发布命令、可选编辑器菜单和模板包见 [发布 SDK](docs/publication-sdk.md)，结果与性能边界见 [M4 / M5 验收记录](docs/m5-validation.md)。本轮验证的是明确的样例 API 范围，未宣称完整 Godot / .NET API 或 Android ARM64 支持。
+首次体验、官方 .NET 编辑器开发调试及三平台发布步骤见 [Demo 操作说明](docs/demo-guide.zh-CN.md)。统一发布命令、可选编辑器菜单和模板包见 [发布 SDK](docs/publication-sdk.md)，结果与性能边界见 [M4 / M5 验收记录](docs/m5-validation.md)。本轮验证的是明确的样例 API 范围，未宣称完整 Godot / .NET API 或 Android ARM64 支持。
 
 原有 GDExtension 极简 demo 保留用于底层回归；它可直接使用标准 Godot 发布程序。正式 C# Node2D 路线使用专用引擎模板，构建需要固定版本 Godot 源码。
 
